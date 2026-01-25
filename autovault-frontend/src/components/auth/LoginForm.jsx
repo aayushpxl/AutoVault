@@ -10,11 +10,14 @@ import { AuthContext } from "../../auth/AuthProvider";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useSendResetLink } from "../../hooks/admin/useAdminUser";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const { mutate, data, error, isPending, isSuccess } = useLoginUser();
   const { mutate: sendResetLink, isPending: isSendingReset } = useSendResetLink();
@@ -35,8 +38,21 @@ const LoginForm = () => {
       password: "",
     },
     validationSchema,
-    onSubmit: (values) => {
-      mutate(values);
+    onSubmit: async (values) => {
+      // Execute reCAPTCHA
+      try {
+        const recaptchaToken = await executeRecaptcha("login");
+
+        if (!recaptchaToken) {
+          toast.error("ReCAPTCHA verification failed. Please try again.");
+          return;
+        }
+
+        mutate({ ...values, recaptchaToken });
+      } catch (error) {
+        console.error("ReCAPTCHA error:", error);
+        toast.error("ReCAPTCHA error. Please refresh and try again.");
+      }
     },
   });
 
