@@ -41,8 +41,10 @@ const LoginForm = () => {
   });
 
   useEffect(() => {
-    if (isSuccess && data?.data && data?.token) {
-      login(data.data, data.token);
+    if (isSuccess && data?.data) {
+      // Backend uses HttpOnly cookies, so token might not be in body. 
+      // We pass a placeholder if missing to satisfy AuthProvider's localStorage check.
+      login(data.data, data.token || "secure-cookie-session");
       toast.success(data.message || "Login successful");
 
       if (data.data.role === "admin") {
