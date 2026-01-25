@@ -180,8 +180,8 @@ exports.loginUser = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Login successful",
-            data: userData
-            // Note: Token is in HttpOnly cookie, not in response body
+            data: userData,
+            token: token // Sending token for frontend fallback (improves dev reliability)
         });
 
     } catch (error) {
