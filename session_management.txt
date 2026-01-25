@@ -1,0 +1,37 @@
+Session Management in AutoVault
+
+Your application uses JSON Web Tokens (JWT) for stateless session management.
+
+1. GENERATION (Backend)
+- When a user logs in (userController.js), the server validates credentials.
+- If valid, it generates a JWT using `jwt.sign()`.
+- The token is signed with your SECRET key from the .env file.
+- It lasts for 7 days (`expiresIn: "7d"`).
+
+2. STORAGE (Frontend)
+- The login response includes the token and user data.
+- AuthProvider.jsx saves these to the browser's `localStorage`.
+- `localStorage.setItem("token", token)`
+- `localStorage.setItem("user", JSON.stringify(userData))`
+
+3. PERSISTENCE
+- On every page load/refresh, AuthProvider.jsx checks localStorage.
+- If a token exists, the user is automatically logged back into the React state.
+
+4. AUTHENTICATION (Middleware)
+- For any private action, the frontend sends the token in the "Authorization" header.
+- The `authenticateUser.js` middleware on the backend:
+  a. Extracts the token.
+  b. Verifies it with the SECRET key.
+  c. Fetches the user from the database.
+  d. Rejects the request if the token is invalid or expired.
+
+5. LOGOUT
+- The `logout` function in AuthProvider.jsx removes the items from localStorage and clears the React state.
+- `localStorage.removeItem("user")`
+- `localStorage.removeItem("token")`
+
+Benefits:
+- No session data is stored on the server (Stateless).
+- Fast and scalable.
+- Enables persistent login across browser tabs.
