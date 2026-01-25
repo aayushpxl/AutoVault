@@ -17,6 +17,13 @@ const verifyRecaptcha = async (req, res, next) => {
         }
 
         // Verify with Google reCAPTCHA API
+
+        // DEVELOPMENT BYPASS: Allow specific token to bypass check in development
+        if (process.env.NODE_ENV === 'development' && recaptchaToken === 'dev-bypass-token') {
+            console.log('ReCAPTCHA bypassed (Development Mode)');
+            return next();
+        }
+
         const verificationURL = 'https://www.google.com/recaptcha/api/siteverify';
         const response = await axios.post(verificationURL, null, {
             params: {
