@@ -26,7 +26,7 @@ const setTokenCookie = (res, token) => {
     const cookieOptions = {
         httpOnly: true, // Prevents XSS attacks
         secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-        sameSite: 'strict', // CSRF protection
+        sameSite: 'lax', // Use 'lax' for better compatibility with localhost redirects
         maxAge: expiryDays * 24 * 60 * 60 * 1000, // Convert days to milliseconds
         path: '/' // Cookie available for all routes
     };
@@ -41,7 +41,7 @@ const clearTokenCookie = (res) => {
     res.cookie('token', '', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'lax',
         expires: new Date(0), // Expire immediately
         path: '/'
     });
