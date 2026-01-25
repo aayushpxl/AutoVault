@@ -221,6 +221,12 @@ const RegisterForm = () => {
 
       {isSuccess && <p className="text-green-600 text-sm text-center mt-3">{data.message}</p>}
       {isError && <p className="text-red-500 text-sm text-center mt-3">{error.message}</p>}
+
+      <p className="text-xs text-gray-400 text-center mt-4">
+        This site is protected by reCAPTCHA and the Google
+        <a href="https://policies.google.com/privacy" className="text-blue-500 hover:underline"> Privacy Policy</a> and
+        <a href="https://policies.google.com/terms" className="text-blue-500 hover:underline"> Terms of Service</a> apply.
+      </p>
     </form>
   );
 };

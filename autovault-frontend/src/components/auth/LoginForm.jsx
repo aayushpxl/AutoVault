@@ -163,6 +163,9 @@ const LoginForm = () => {
         >
           {isPending ? "Logging in..." : "Login"}
         </button>
+        <p className="text-xs text-gray-400 text-center mb-4">
+          Protected by reCAPTCHA
+        </p>
       </form>
 
       <p className="text-sm text-gray-700 mb-5">
