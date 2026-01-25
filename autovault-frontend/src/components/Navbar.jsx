@@ -28,7 +28,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 w-full bg-gradient-primary/95 backdrop-blur-xl border-b border-white/10 z-50 shadow-lg transition-all duration-300">
+    <nav className="fixed top-0 left-0 w-full bg-slate-900/80 backdrop-blur-md border-b border-white/5 z-50 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
         <NavLink to="/home" className="flex items-center group">
@@ -59,21 +59,21 @@ export default function Navbar() {
         </ul>
 
         {/* Search bar (desktop) */}
-        <div className="hidden md:flex items-center space-x-2">
-          <div className="relative">
+        <div className="hidden md:flex items-center space-x-3">
+          <div className="relative group">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Search vehicles..."
-              className="border border-white/20 bg-white/10 backdrop-blur-sm rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-accent focus:bg-white/15 w-64 transition-all duration-300"
+              placeholder="Find your perfect ride..."
+              className="border border-white/10 bg-white/5 rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-accent focus:bg-white/10 w-72 transition-all duration-300 hover:bg-white/10"
             />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-white transition-colors w-4 h-4" />
           </div>
           <button
             onClick={handleSearch}
-            className="bg-gradient-secondary text-white text-sm font-semibold rounded-full px-6 py-2.5 transition-all duration-300 transform hover:scale-105 hover:shadow-glow-orange"
+            className="bg-accent hover:bg-accent/90 text-white text-sm font-bold rounded-full px-6 py-2.5 transition-all duration-300 shadow-lg hover:shadow-accent/50"
           >
             Search
           </button>

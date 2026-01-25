@@ -1,10 +1,11 @@
 import React from "react";
 import { Typewriter } from "react-simple-typewriter";
 import blueCar from "../assets/landing_assests/bluecar.png";
+import LocationDate from "./LocationDate";
 
 export default function LandingSection() {
   return (
-    <section className="relative w-screen overflow-hidden bg-gradient-hero px-4 md:px-20 lg:px-2 pb-40 pt-28 -mt-6">
+    <section className="relative w-screen bg-gradient-hero px-4 md:px-20 lg:px-2 pb-40 pt-28 -mt-6">
       {/* Decorative gradient orbs */}
       <div className="absolute top-20 left-10 w-72 h-72 bg-accent/20 rounded-full blur-3xl opacity-30"></div>
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl opacity-30"></div>
@@ -90,6 +91,11 @@ export default function LandingSection() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Floating Search Bar */}
+      <div className="absolute bottom-0 left-0 w-full translate-y-1/2 z-30 px-4">
+        <LocationDate />
       </div>
     </section>
   );

@@ -51,75 +51,66 @@ export default function LocationDate() {
   }, [position]);
 
   return (
-    <div className="absolute left-1/2 -translate-x-1/2 top-[480px] bg-white shadow-premium rounded-2xl flex flex-col sm:flex-row items-center px-8 py-6 gap-6 sm:gap-8 w-[90%] sm:w-[70%] max-w-4xl z-20 border border-slate-200 animate-fadeInUp">
-      {/* Location */}
-      <div className="flex items-center gap-3 w-full relative">
-        <div className="flex-shrink-0">
-          <MdLocationOn
-            className="text-secondary text-2xl cursor-pointer hover:scale-110 transition-transform duration-300"
-            onClick={() => setShowMap((prev) => !prev)}
-          />
+    <div className="bg-white shadow-2xl rounded-2xl flex flex-col md:flex-row items-center px-6 py-5 gap-4 md:gap-0 w-full max-w-5xl z-10 border border-gray-100 mx-auto transform translate-y-10 lg:translate-y-16">
+
+      {/* Location Input */}
+      <div className="flex-1 flex items-center gap-4 px-4 w-full md:border-r border-gray-200">
+        <div className="bg-blue-50 p-3 rounded-full text-secondary">
+          <MdLocationOn size={24} className="cursor-pointer hover:scale-110 transition-transform" onClick={() => setShowMap(!showMap)} />
         </div>
-        <div className="flex flex-col text-sm w-full">
-          <span className="font-semibold text-dark mb-1">Location</span>
+        <div className="flex flex-col w-full relative">
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Location</label>
           <input
             type="text"
             value={locationText}
-            placeholder="Find your location"
+            placeholder="Where are you going?"
             readOnly
-            className="outline-none bg-transparent text-gray-600 placeholder:text-sm placeholder:text-gray-400"
+            className="outline-none bg-transparent text-gray-800 font-medium placeholder-gray-400 w-full cursor-pointer"
+            onClick={() => setShowMap(!showMap)}
           />
+
+          {/* Map Popup attached to Location section */}
+          {showMap && (
+            <div className="absolute top-14 left-0 w-72 h-64 z-50 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden animate-fadeIn">
+              <MapContainer center={position || [51.505, -0.09]} zoom={13} style={{ height: "100%", width: "100%" }}>
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {position && <Marker position={position} />}
+                <LocationPicker setPosition={setPosition} />
+              </MapContainer>
+            </div>
+          )}
         </div>
-
-        {/* Map popup */}
-        {showMap && (
-          <div className="absolute top-16 left-0 w-[320px] h-[240px] z-50 border-2 border-accent rounded-xl overflow-hidden shadow-premium">
-            <MapContainer
-              center={position || [51.505, -0.09]}
-              zoom={13}
-              style={{ height: "100%", width: "100%" }}
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {position && <Marker position={position} />}
-              <LocationPicker setPosition={setPosition} />
-            </MapContainer>
-          </div>
-        )}
       </div>
-
-      {/* Divider */}
-      <div className="hidden sm:block w-px h-12 bg-slate-300"></div>
 
       {/* Date Picker */}
-      <div className="flex items-center gap-3 w-full relative">
-        <div className="flex-shrink-0">
-          <MdCalendarToday
-            className="text-secondary text-2xl cursor-pointer hover:scale-110 transition-transform duration-300"
+      <div className="flex-1 flex items-center gap-4 px-4 w-full md:border-r border-gray-200 mt-4 md:mt-0">
+        <div className="bg-orange-50 p-3 rounded-full text-secondary">
+          <MdCalendarToday size={22} className="cursor-pointer" onClick={() => dateInputRef.current?.showPicker()} />
+        </div>
+        <div className="flex flex-col w-full">
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Pick-up Date</label>
+          <div
+            className="text-gray-800 font-medium cursor-pointer"
             onClick={() => dateInputRef.current?.showPicker()}
+          >
+            {selectedDate || "Select Date"}
+          </div>
+          <input
+            ref={dateInputRef}
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="absolute opacity-0 pointer-events-none"
           />
         </div>
-        <div className="flex flex-col text-sm w-full">
-          <span className="font-semibold text-dark mb-1">Select Date</span>
-          <span className="text-gray-600">
-            {selectedDate ? selectedDate : "No date selected"}
-          </span>
-        </div>
-        {/* Hidden native input to trigger date picker */}
-        <input
-          ref={dateInputRef}
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="absolute opacity-0 pointer-events-none"
-        />
       </div>
 
-      {/* Button */}
-      <button className="bg-gradient-secondary hover:shadow-glow-orange text-white px-10 py-3.5 rounded-full text-sm font-semibold transition-all duration-300 transform hover:scale-105 flex-shrink-0">
-        Search
-      </button>
+      {/* Search Button */}
+      <div className="px-4 mt-4 md:mt-0 w-full md:w-auto">
+        <button className="bg-secondary hover:bg-secondary/90 text-white h-14 px-8 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 w-full md:w-auto flex items-center justify-center gap-2">
+          Find Cars
+        </button>
+      </div>
     </div>
   );
 }

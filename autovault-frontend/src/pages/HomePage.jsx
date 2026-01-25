@@ -13,7 +13,6 @@ export default function HomePage() {
   return (
     <div>
       <LandingSection />
-      <LocationDate/>
       <BrandsSection />
       <AvailableVehicles />
       <HowItWorks />
