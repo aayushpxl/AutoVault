@@ -262,7 +262,7 @@ export default function UserVehicleTable() {
                         <img
                           src={
                             vehicle.filepath
-                              ? `http://localhost:5000/uploads/${vehicle.filepath}`
+                              ? `${(import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace("/api", "")}/uploads/${vehicle.filepath}`
                               : "/placeholder.jpg"
                           }
                           alt={vehicle.vehicleName}
