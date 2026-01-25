@@ -3,6 +3,8 @@ import { FaEnvelope, FaEye, FaEyeSlash, FaLock, FaUser } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { userRegisterUserTan } from "../../hooks/useRegisterUserTan";
 
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+
 const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -12,9 +14,10 @@ const RegisterForm = () => {
   const [confirmPass, setConfirmPass] = useState("");
   const [username, setUsername] = useState("");
 
+  const { executeRecaptcha } = useGoogleReCaptcha();
   const { mutate, data, error, isPending, isSuccess, isError } = userRegisterUserTan();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email || !username || !pass || !confirmPass) {
@@ -43,13 +46,27 @@ const RegisterForm = () => {
       return;
     }
 
-    const formData = {
-      email,
-      username,
-      password: pass,
-    };
+    // Execute reCAPTCHA
+    try {
+      const recaptchaToken = await executeRecaptcha("register");
 
-    mutate(formData);
+      if (!recaptchaToken) {
+        toast.error("ReCAPTCHA verification failed. Please try again.");
+        return;
+      }
+
+      const formData = {
+        email,
+        username,
+        password: pass,
+        recaptchaToken
+      };
+
+      mutate(formData);
+    } catch (error) {
+      console.error("ReCAPTCHA error:", error);
+      toast.error("ReCAPTCHA error. Please refresh and try again.");
+    }
   };
 
   return (

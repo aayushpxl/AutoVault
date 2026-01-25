@@ -3,7 +3,7 @@ const rateLimit = require('express-rate-limit');
 // Registration rate limiter - 3 attempts per hour per IP
 const registrationLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 3,
+    max: 100, // Increased for development
     message: {
         success: false,
         message: 'Too many registration attempts from this IP. Please try again after an hour.'
