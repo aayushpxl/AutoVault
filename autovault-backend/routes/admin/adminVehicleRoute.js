@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 // Corrected middleware import — change "uploads" to "upload" if your file is upload.js
-const upload = require("../../middlewares/uploads");
+const { upload } = require("../../middlewares/uploads");
 
 const {
     createVehicle,
@@ -34,8 +34,8 @@ router.get(
 
 // Update vehicle by ID
 router.put("/:id",
-     upload.single("image"),
-      updateVehicle);
+    upload.single("image"),
+    updateVehicle);
 
 // Delete vehicle by ID
 router.delete(
