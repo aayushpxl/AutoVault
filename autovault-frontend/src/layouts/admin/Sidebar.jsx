@@ -1,18 +1,17 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-  FaChartLine, FaUser, FaCar, FaBook, FaMoneyBillWave, FaInbox, FaCog
+  FaChartLine, FaUser, FaCar, FaBook, FaMoneyBillWave, FaInbox, FaCog, FaClipboardList
 } from 'react-icons/fa';
 
 const SidebarItem = ({ icon, label, to }) => (
   <NavLink to={to}>
     {({ isActive }) => (
       <div
-        className={`flex items-center gap-3 px-4 py-3 rounded-tr-md rounded-br-md transition duration-200 text-sm font-medium ${
-          isActive
-            ? 'text-blue-600 border-l-4 border-blue-600'
-            : 'text-gray-400 hover:text-blue-500'
-        }`}
+        className={`flex items-center gap-3 px-4 py-3 rounded-tr-md rounded-br-md transition duration-200 text-sm font-medium ${isActive
+          ? 'text-blue-600 border-l-4 border-blue-600'
+          : 'text-gray-400 hover:text-blue-500'
+          }`}
       >
         <span className={`text-lg ${isActive ? 'text-blue-600' : 'text-gray-400'}`}>
           {icon}
@@ -36,6 +35,7 @@ const Sidebar = () => (
         <SidebarItem icon={<FaUser />} label="Users" to="/admin/users" />
         <SidebarItem icon={<FaCar />} label="Vehicles" to="/admin/vehicles" />
         <SidebarItem icon={<FaBook />} label="Bookings" to="/admin/bookings" />
+        <SidebarItem icon={<FaClipboardList />} label="Audit Logs" to="/admin/logs" />
       </div>
     </div>
 

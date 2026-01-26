@@ -15,7 +15,9 @@ const sanitizeObject = (obj) => {
     if (obj !== null && typeof obj === 'object') {
         const sanitized = {};
         for (const key in obj) {
-            if (obj.hasOwnProperty(key)) {
+            // Use Object.prototype.hasOwnProperty.call instead of obj.hasOwnProperty
+            // to handle objects without Object.prototype (like query params)
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
                 sanitized[key] = sanitizeObject(obj[key]);
             }
         }

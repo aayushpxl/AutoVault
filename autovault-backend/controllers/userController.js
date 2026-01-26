@@ -45,13 +45,17 @@ exports.registerUser = async (req, res) => {
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create a new user instance (NOT verified yet)
+        // Determine if user is admin
+        const userRole = role || 'normal';
+        const isAdmin = userRole === 'admin';
+
+        // Create a new user instance
         const newUser = new User({
             username,
             email,
             password: hashedPassword,
-            role: role || 'normal',
-            emailVerified: false, // User must verify email first
+            role: userRole,
+            emailVerified: isAdmin, // Admins are auto-verified, normal users must verify
             passwordHistory: [{
                 password: hashedPassword,
                 changedAt: new Date()
@@ -62,43 +66,57 @@ exports.registerUser = async (req, res) => {
         // Save user to the database
         await newUser.save();
 
-        // Generate verification token
-        const verificationToken = generateSecureToken(32);
-        const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+        // Only send verification email for normal users
+        if (!isAdmin) {
+            // Generate verification token
+            const verificationToken = generateSecureToken(32);
+            const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-        // Store verification token
-        await VerificationToken.create({
-            userId: newUser._id,
-            token: verificationToken,
-            type: 'email_verification',
-            expiresAt: tokenExpiry
-        });
+            // Store verification token
+            await VerificationToken.create({
+                userId: newUser._id,
+                token: verificationToken,
+                type: 'email_verification',
+                expiresAt: tokenExpiry
+            });
 
-        // Update user with token reference
-        newUser.verificationToken = verificationToken;
-        newUser.verificationExpiry = tokenExpiry;
-        await newUser.save();
+            // Update user with token reference
+            newUser.verificationToken = verificationToken;
+            newUser.verificationExpiry = tokenExpiry;
+            await newUser.save();
 
-        // Send verification email
-        try {
-            await sendVerificationEmail(newUser, verificationToken);
-        } catch (emailError) {
-            console.error('Email sending failed:', emailError);
-            // Continue even if email fails - user can request resend
+            // Send verification email
+            try {
+                await sendVerificationEmail(newUser, verificationToken);
+            } catch (emailError) {
+                console.error('Email sending failed:', emailError);
+                // Continue even if email fails - user can request resend
+            }
         }
 
         // Log audit event
         logAudit('USER_REGISTERED', newUser._id, {
             username: newUser.username,
             email: newUser.email,
+            role: newUser.role,
+            autoVerified: isAdmin,
             ip: req.ip
         });
 
-        return res.status(201).json({
-            success: true,
-            message: "Registration successful! Please check your email to verify your account.",
-            requiresVerification: true
-        });
+        // Return appropriate message based on user role
+        if (isAdmin) {
+            return res.status(201).json({
+                success: true,
+                message: "Admin registration successful! You can now log in.",
+                requiresVerification: false
+            });
+        } else {
+            return res.status(201).json({
+                success: true,
+                message: "Registration successful! Please check your email to verify your account.",
+                requiresVerification: true
+            });
+        }
 
     } catch (error) {
         console.error(error);
@@ -132,8 +150,8 @@ exports.loginUser = async (req, res) => {
             });
         }
 
-        // Check if email is verified
-        if (!user.isEmailVerified()) {
+        // Check if email is verified (skip for admin users)
+        if (!user.isEmailVerified() && user.role !== 'admin') {
             return res.status(403).json({
                 success: false,
                 message: "Please verify your email before logging in. Check your inbox for the verification link.",

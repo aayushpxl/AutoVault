@@ -19,8 +19,7 @@ import AboutUs from "../pages/AboutUs";
 import ResetPasswordPage from "../components/auth/ResetPasswordPage";
 import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
 import AdminProfilePage from "../components/admin/AdminProfilePage";
-
-
+import AuditLogPage from "../pages/admin/AuditLogPage";
 import AdminRoute from "./AdminRoute";
 import UserRoute from "./UserRoute";
 import SavedVehicle from "../pages/SavedVehicle";
@@ -39,6 +38,7 @@ const AppRouter = () => {
           <Route path="vehicles" element={<VehicleDetailsTable />} />
           <Route path="vehicles/create" element={<CreateVehicleForm />} />
           <Route path="bookings" element={<BookingTable />} />
+          <Route path="logs" element={<AuditLogPage />} />
           <Route path="setting" element={<AdminProfilePage />} />
         </Route>
       </Route>

@@ -102,12 +102,39 @@ const sanitizeLogData = (data) => {
 
 // Log user action
 const logAudit = (action, userId, details = {}) => {
+    // 1. Log to file (Winston)
     auditLogger.info({
         action,
         userId,
         ...sanitizeLogData(details),
         timestamp: new Date().toISOString()
     });
+
+    // 2. Log to Database (MongoDB)
+    // Fire and forget - don't await to avoid blocking response
+    try {
+        const AuditLog = require('../models/AuditLog');
+
+        // Extract IP and User Agent if present in details, otherwise check request object if passed
+        // Note: details might contain ip/userAgent directly
+
+        const logEntry = new AuditLog({
+            action,
+            userId: userId || undefined, // undefined if null
+            username: details.username,
+            details: sanitizeLogData(details),
+            ip: details.ip,
+            userAgent: details.userAgent,
+            status: details.status || 'success',
+            timestamp: new Date()
+        });
+
+        logEntry.save().catch(err => {
+            console.error('Failed to save audit log to DB:', err.message);
+        });
+    } catch (err) {
+        console.error('Error in logAudit DB saving:', err.message);
+    }
 };
 
 // Log error
