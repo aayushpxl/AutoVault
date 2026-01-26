@@ -14,10 +14,10 @@ const registrationLimiter = rateLimit({
     skipSuccessfulRequests: true
 });
 
-// Login rate limiter - 10 attempts per 10 minutes per IP
+// Login rate limiter - 100 attempts per 10 minutes per IP (Relaxed for dev)
 const loginLimiter = rateLimit({
     windowMs: 10 * 60 * 1000, // 10 minutes
-    max: 10,
+    max: 100,
     message: {
         success: false,
         message: 'Too many login attempts from this IP. Please try again after 10 minutes.'
@@ -28,10 +28,10 @@ const loginLimiter = rateLimit({
     skipSuccessfulRequests: true
 });
 
-// General API rate limiter - 100 requests per 15 minutes per IP
+// General API rate limiter - 1000 requests per 15 minutes per IP (Relaxed for dev)
 const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100,
+    max: 1000,
     message: {
         success: false,
         message: 'Too many requests from this IP. Please try again later.'

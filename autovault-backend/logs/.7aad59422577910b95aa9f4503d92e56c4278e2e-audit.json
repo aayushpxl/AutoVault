@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "C:\\Users\\aayus\\AutoVault\\autovault-backend\\logs\\.7aad59422577910b95aa9f4503d92e56c4278e2e-audit.json",
+    "files": [
+        {
+            "date": 1769379267330,
+            "name": "C:\\Users\\aayus\\AutoVault\\autovault-backend\\logs\\audit-2026-01-26.log",
+            "hash": "a63f9afaf2724110edc7529f27aa1633ce440935c4806a234c83a21d374ad226"
+        }
+    ],
+    "hashType": "sha256"
+}
