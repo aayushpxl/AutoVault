@@ -384,6 +384,15 @@ exports.verifyEmail = async (req, res) => {
         // Delete verification token
         await VerificationToken.deleteOne({ _id: verificationToken._id });
 
+        // Generate JWT token for auto-login
+        const tokenForAutoLogin = generateToken(user);
+
+        // Set token in HttpOnly cookie
+        setTokenCookie(res, tokenForAutoLogin);
+
+        // Convert user document to plain object and exclude sensitive fields
+        const { password: _, passwordHistory, otpCode, twoFactorSecret, ...userData } = user.toObject();
+
         // Send welcome email
         try {
             await sendWelcomeEmail(user);
@@ -401,7 +410,9 @@ exports.verifyEmail = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Email verified successfully! You can now log in to your account."
+            message: "Email verified successfully! You are now logged in.",
+            data: userData,
+            token: tokenForAutoLogin
         });
 
     } catch (error) {

@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import React, { useEffect, useState, useContext } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "../../api/Api"; // Assuming you have an axios instance configured
 import { FaCheckCircle, FaTimesCircle, FaSpinner } from "react-icons/fa";
+import { AuthContext } from "../../auth/AuthProvider";
 
 const VerifyEmailPage = () => {
     const { token } = useParams();
+    const navigate = useNavigate();
+    const { login } = useContext(AuthContext);
     const [status, setStatus] = useState("verifying"); // verifying, success, error
     const [message, setMessage] = useState("Verifying your email...");
 
@@ -18,8 +21,24 @@ const VerifyEmailPage = () => {
 
             try {
                 const response = await axios.get(`/auth/verify-email/${token}`);
+                const { data, token: authToken, message: successMsg } = response.data;
+
                 setStatus("success");
-                setMessage(response.data.message || "Email verified successfully!");
+                setMessage(successMsg || "Email verified successfully!");
+
+                // Log the user in automatically
+                if (data && authToken) {
+                    login(data, authToken);
+
+                    // Redirect to home after a short delay to let the user read the message
+                    setTimeout(() => {
+                        if (data.role === "admin") {
+                            navigate("/admin/dashboard");
+                        } else {
+                            navigate("/home");
+                        }
+                    }, 3000);
+                }
             } catch (error) {
                 setStatus("error");
                 setMessage(
@@ -29,7 +48,7 @@ const VerifyEmailPage = () => {
         };
 
         verifyEmail();
-    }, [token]);
+    }, [token, login, navigate]);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "jest": "^30.0.4",
+    "selfsigned": "^5.5.0",
     "supertest": "^7.1.3"
   }
 }

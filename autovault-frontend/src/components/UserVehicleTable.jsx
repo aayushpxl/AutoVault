@@ -136,7 +136,7 @@ export default function UserVehicleTable() {
     vehicles.forEach(async (vehicle) => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/reviews/${vehicle._id}`
+          `https://localhost:5000/api/reviews/${vehicle._id}`
         );
         const data = await res.json();
         setReviewsMap((prev) => ({ ...prev, [vehicle._id]: data }));
@@ -148,7 +148,7 @@ export default function UserVehicleTable() {
 
   const onReviewAdded = () => {
     if (!reviewVehicle) return;
-    fetch(`http://localhost:5000/api/reviews/${reviewVehicle._id}`)
+    fetch(`https://localhost:5000/api/reviews/${reviewVehicle._id}`)
       .then((res) => res.json())
       .then((data) =>
         setReviewsMap((prev) => ({ ...prev, [reviewVehicle._id]: data }))
@@ -262,7 +262,7 @@ export default function UserVehicleTable() {
                         <img
                           src={
                             vehicle.filepath
-                              ? `${(import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace("/api", "")}/uploads/${vehicle.filepath}`
+                              ? `${(import.meta.env.VITE_API_BASE_URL || "https://localhost:5000/api").replace("/api", "")}/uploads/${vehicle.filepath}`
                               : "/placeholder.jpg"
                           }
                           alt={vehicle.vehicleName}

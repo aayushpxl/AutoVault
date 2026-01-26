@@ -7,7 +7,7 @@ import UpdateBookingModal from "../components/auth/Booking/UpdateBookingModal";
 import BookingDeleteModal from "../components/auth/Booking/BookingDeleteModal";
 import { FaTimesCircle, FaUndoAlt, FaEdit, FaTrashAlt } from "react-icons/fa";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "https://localhost:5000";
 
 const fetchUserBookings = async () => {
   const { data } = await axios.get("/bookings/my");
@@ -90,11 +90,10 @@ export default function MyBookingPage() {
                     {booking.vehicleId?.vehicleName || "Unnamed Vehicle"}
                   </h3>
                   <span
-                    className={`text-[12px] font-medium px-2 py-[2px] rounded-full ${
-                      booking.status === "cancelled"
+                    className={`text-[12px] font-medium px-2 py-[2px] rounded-full ${booking.status === "cancelled"
                         ? "bg-red-100 text-red-500"
                         : "bg-green-100 text-green-600"
-                    }`}
+                      }`}
                   >
                     {booking.status}
                   </span>
@@ -143,11 +142,10 @@ export default function MyBookingPage() {
                     <button
                       onClick={() => openEditModal(booking)}
                       disabled={booking.status === "cancelled"}
-                      className={`text-[12px] px-3 py-1 rounded-md flex items-center gap-1 ${
-                        booking.status === "cancelled"
+                      className={`text-[12px] px-3 py-1 rounded-md flex items-center gap-1 ${booking.status === "cancelled"
                           ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                           : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                      }`}
+                        }`}
                     >
                       <FaEdit size={12} />
                       Edit

@@ -99,7 +99,7 @@ export default function SearchResultsPage() {
                   <img
                     src={
                       vehicle.filepath
-                        ? `http://localhost:5000/uploads/${vehicle.filepath}`
+                        ? `https://localhost:5000/uploads/${vehicle.filepath}`
                         : "/placeholder.jpg"
                     }
                     alt={vehicle.vehicleName}

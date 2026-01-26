@@ -31,17 +31,16 @@ export default function SavedVehicle() {
 
   return (
     <div
-      className={`min-h-screen py-8 px-4 max-w-7xl mx-auto ${
-        shouldCenterContent
+      className={`min-h-screen py-8 px-4 max-w-7xl mx-auto ${shouldCenterContent
           ? "flex flex-col justify-center items-center text-center"
           : ""
-      }`}
+        }`}
     >
       {/* Top-left title */}
       <div className="flex justify-start mb-4 w-full">
         <h2 className="text-2xl font-bold flex items-center gap-2">
-         
-          
+
+
         </h2>
       </div>
 
@@ -76,7 +75,7 @@ export default function SavedVehicle() {
                   <img
                     src={
                       vehicleId.filepath
-                        ? `http://localhost:5000/uploads/${vehicleId.filepath}`
+                        ? `https://localhost:5000/uploads/${vehicleId.filepath}`
                         : "/placeholder.jpg"
                     }
                     alt={vehicleId.vehicleName}

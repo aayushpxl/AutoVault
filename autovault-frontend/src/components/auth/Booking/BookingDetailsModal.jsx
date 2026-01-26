@@ -60,7 +60,7 @@ const BookingDetailsModal = ({ booking, onClose }) => {
           {booking.vehicleId?.filepath && (
             <div className="w-full flex justify-center">
               <img
-                src={`http://localhost:5000/uploads/${booking.vehicleId.filepath}`}
+                src={`https://localhost:5000/uploads/${booking.vehicleId.filepath}`}
                 alt={booking.vehicleId.vehicleName || "Vehicle"}
                 className="rounded-lg shadow-sm max-h-[220px] object-contain"
               />

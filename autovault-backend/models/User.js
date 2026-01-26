@@ -108,9 +108,9 @@ UserSchema.methods.incrementLoginAttempts = function () {
   // Otherwise increment
   const updates = { $inc: { failedLoginAttempts: 1 } };
 
-  // Lock account after 5 failed attempts for 1 hour
+  // Lock account after 5 failed attempts for 10 minutes
   if (this.failedLoginAttempts + 1 >= 5) {
-    updates.$set = { accountLockedUntil: Date.now() + 3600000 }; // 1 hour
+    updates.$set = { accountLockedUntil: Date.now() + 600000 }; // 10 minutes
   }
 
   return this.updateOne(updates);

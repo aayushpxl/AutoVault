@@ -6,7 +6,7 @@ import BookingDeleteModal from "./auth/Booking/BookingDeleteModal";
 import UndoCancelModal from "./auth/Booking/UndoCancelModal";
 import CancelBookingModal from "./auth/Booking/CancelBookingModal"; // import your cancel modal
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "https://localhost:5000";
 
 const ActionsDropdown = ({
   onView,
@@ -75,11 +75,10 @@ const ActionsDropdown = ({
                   setOpen(false);
                 }}
                 disabled={disabledCancel}
-                className={`block w-full text-left px-4 py-2 ${
-                  disabledCancel
+                className={`block w-full text-left px-4 py-2 ${disabledCancel
                     ? "text-gray-400 cursor-not-allowed"
                     : "text-red-600 hover:bg-red-100 hover:text-red-800"
-                }`}
+                  }`}
                 type="button"
               >
                 Cancel Booking
@@ -223,13 +222,12 @@ const BookingTable = () => {
                       <p>
                         <span className="font-medium">Status:</span>{" "}
                         <span
-                          className={`ml-1 font-semibold ${
-                            booking.status === "cancelled"
+                          className={`ml-1 font-semibold ${booking.status === "cancelled"
                               ? "text-red-600"
                               : booking.status === "completed"
-                              ? "text-green-600"
-                              : "text-blue-600"
-                          }`}
+                                ? "text-green-600"
+                                : "text-blue-600"
+                            }`}
                         >
                           {booking.status}
                         </span>

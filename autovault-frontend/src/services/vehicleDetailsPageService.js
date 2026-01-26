@@ -18,7 +18,7 @@ export const getRelatedVehiclesService = async (id) => {
   }
 };
 export const searchVehiclesService = async (query) => {
-  const response = await fetch(`http://localhost:5000/api/vehicles/search?query=${encodeURIComponent(query)}`);
+  const response = await fetch(`https://localhost:5000/api/vehicles/search?query=${encodeURIComponent(query)}`);
 
   if (!response.ok) {
     const errorText = await response.text();  // get text to help debug

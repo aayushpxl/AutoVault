@@ -18,7 +18,7 @@ const VehicleDetailsPage = () => {
 
   const fetchReviews = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/reviews/${id}`);
+      const res = await fetch(`https://localhost:5000/api/reviews/${id}`);
       const data = await res.json();
       setReviews(data);
     } catch (err) {
@@ -48,7 +48,7 @@ const VehicleDetailsPage = () => {
         {/* Vehicle Image & Info */}
         <div className="md:col-span-2 space-y-6">
           <img
-            src={`http://localhost:5000/uploads/${vehicle.filepath}`}
+            src={`https://localhost:5000/uploads/${vehicle.filepath}`}
             alt={vehicle.vehicleName}
             className="w-full max-h-72 object-contain rounded-lg border shadow-sm"
           />
@@ -94,47 +94,47 @@ const VehicleDetailsPage = () => {
         </div>
 
         {/* Reviews Section */}
-<div className="border rounded-lg p-6 flex flex-col shadow-md bg-white max-h-[380px]">
-  <h2 className="text-3xl font-bold mb-6 text-gray-900 border-b pb-3">Reviews</h2>
+        <div className="border rounded-lg p-6 flex flex-col shadow-md bg-white max-h-[380px]">
+          <h2 className="text-3xl font-bold mb-6 text-gray-900 border-b pb-3">Reviews</h2>
 
-  <div className="flex items-center gap-1 mb-4">
-    {[1, 2, 3, 4, 5].map((star) =>
-      star <= Math.round(avgRating) ? (
-        <FaStar key={star} className="text-yellow-500" size={22} />
-      ) : (
-        <FaRegStar key={star} className="text-yellow-400" size={22} />
-      )
-    )}
-    <span className="text-gray-500 ml-3 text-sm font-medium">
-      {avgRating.toFixed(1)} ({reviews.length} review{reviews.length !== 1 ? "s" : ""})
-    </span>
-  </div>
+          <div className="flex items-center gap-1 mb-4">
+            {[1, 2, 3, 4, 5].map((star) =>
+              star <= Math.round(avgRating) ? (
+                <FaStar key={star} className="text-yellow-500" size={22} />
+              ) : (
+                <FaRegStar key={star} className="text-yellow-400" size={22} />
+              )
+            )}
+            <span className="text-gray-500 ml-3 text-sm font-medium">
+              {avgRating.toFixed(1)} ({reviews.length} review{reviews.length !== 1 ? "s" : ""})
+            </span>
+          </div>
 
-  <div className="mb-6 flex-grow overflow-y-auto max-h-32 pr-2">
-    {reviews.length > 0 ? (
-      <blockquote className="italic text-gray-700 text-lg leading-relaxed border-l-4 border-teal-600 pl-4">
-        "{reviews[0].comment || "Great vehicle!"}"
-      </blockquote>
-    ) : (
-      <p className="text-gray-500 text-lg">No reviews yet. Be the first to add one!</p>
-    )}
-  </div>
+          <div className="mb-6 flex-grow overflow-y-auto max-h-32 pr-2">
+            {reviews.length > 0 ? (
+              <blockquote className="italic text-gray-700 text-lg leading-relaxed border-l-4 border-teal-600 pl-4">
+                "{reviews[0].comment || "Great vehicle!"}"
+              </blockquote>
+            ) : (
+              <p className="text-gray-500 text-lg">No reviews yet. Be the first to add one!</p>
+            )}
+          </div>
 
-  <div className="flex gap-4 mt-auto">
-    <button
-      onClick={() => setShowReviewListModal(true)}
-      className="flex-1 bg-gray-200 hover:bg-gray-300 transition px-4 py-2 rounded-md font-medium"
-    >
-      View All Reviews
-    </button>
-    <button
-      onClick={() => setShowReviewModal(true)}
-      className="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md font-medium transition"
-    >
-      Add Review
-    </button>
-  </div>
-</div>
+          <div className="flex gap-4 mt-auto">
+            <button
+              onClick={() => setShowReviewListModal(true)}
+              className="flex-1 bg-gray-200 hover:bg-gray-300 transition px-4 py-2 rounded-md font-medium"
+            >
+              View All Reviews
+            </button>
+            <button
+              onClick={() => setShowReviewModal(true)}
+              className="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md font-medium transition"
+            >
+              Add Review
+            </button>
+          </div>
+        </div>
 
       </div>
 
@@ -154,7 +154,7 @@ const VehicleDetailsPage = () => {
                 <img
                   src={
                     v.filepath
-                      ? `http://localhost:5000/uploads/${v.filepath}`
+                      ? `https://localhost:5000/uploads/${v.filepath}`
                       : "/placeholder.jpg"
                   }
                   alt={v.vehicleName}
