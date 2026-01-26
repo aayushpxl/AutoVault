@@ -1,8 +1,11 @@
 const User = require("../models/User");
+const VerificationToken = require("../models/VerificationToken");
 const bcrypt = require("bcrypt");
 const { validatePassword, addToPasswordHistory } = require("../utils/passwordValidator");
 const { generateToken, setTokenCookie, clearTokenCookie } = require("../utils/jwtHandler");
 const { logAudit } = require("../config/logger");
+const { generateSecureToken } = require("../utils/otpGenerator");
+const { sendVerificationEmail, sendWelcomeEmail } = require("../utils/emailService");
 
 // Register User
 exports.registerUser = async (req, res) => {
@@ -42,12 +45,13 @@ exports.registerUser = async (req, res) => {
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create a new user instance
+        // Create a new user instance (NOT verified yet)
         const newUser = new User({
             username,
             email,
             password: hashedPassword,
             role: role || 'normal',
+            emailVerified: false, // User must verify email first
             passwordHistory: [{
                 password: hashedPassword,
                 changedAt: new Date()
@@ -58,6 +62,31 @@ exports.registerUser = async (req, res) => {
         // Save user to the database
         await newUser.save();
 
+        // Generate verification token
+        const verificationToken = generateSecureToken(32);
+        const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+        // Store verification token
+        await VerificationToken.create({
+            userId: newUser._id,
+            token: verificationToken,
+            type: 'email_verification',
+            expiresAt: tokenExpiry
+        });
+
+        // Update user with token reference
+        newUser.verificationToken = verificationToken;
+        newUser.verificationExpiry = tokenExpiry;
+        await newUser.save();
+
+        // Send verification email
+        try {
+            await sendVerificationEmail(newUser, verificationToken);
+        } catch (emailError) {
+            console.error('Email sending failed:', emailError);
+            // Continue even if email fails - user can request resend
+        }
+
         // Log audit event
         logAudit('USER_REGISTERED', newUser._id, {
             username: newUser.username,
@@ -67,7 +96,8 @@ exports.registerUser = async (req, res) => {
 
         return res.status(201).json({
             success: true,
-            message: "User registered successfully"
+            message: "Registration successful! Please check your email to verify your account.",
+            requiresVerification: true
         });
 
     } catch (error) {
@@ -99,6 +129,15 @@ exports.loginUser = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Invalid credentials"
+            });
+        }
+
+        // Check if email is verified
+        if (!user.isEmailVerified()) {
+            return res.status(403).json({
+                success: false,
+                message: "Please verify your email before logging in. Check your inbox for the verification link.",
+                requiresVerification: true
             });
         }
 
@@ -141,19 +180,63 @@ exports.loginUser = async (req, res) => {
         }
 
         // Check if 2FA is enabled
-        if (user.twoFactorEnabled && !user.otpVerified) {
-            // 2FA is enabled but OTP not verified yet
-            // In a complete implementation, we would generate and send OTP here
-            return res.status(200).json({
-                success: true,
-                requiresTwoFactor: true,
-                message: "Please verify your OTP",
-                userId: user._id // Temporary, for OTP verification
-            });
+        if (user.requiresMFA()) {
+            // Reset failed login attempts since password was correct
+            await user.resetLoginAttempts();
+
+            if (user.mfaMethod === 'email') {
+                // Generate and send email OTP
+                const { generateOTPWithExpiry } = require('../utils/otpGenerator');
+                const { sendMFAEmail } = require('../utils/emailService');
+
+                const { code, expiry } = generateOTPWithExpiry(10); // 10 minutes
+
+                user.otpCode = code;
+                user.otpExpiry = expiry;
+                user.otpAttempts = 0;
+                await user.save();
+
+                try {
+                    await sendMFAEmail(user, code);
+                } catch (error) {
+                    console.error('Failed to send MFA email:', error);
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Failed to send verification code. Please try again.'
+                    });
+                }
+
+                logAudit('MFA_OTP_SENT', user._id, {
+                    username: user.username,
+                    mfaMethod: 'email',
+                    ip: req.ip
+                });
+
+                return res.status(200).json({
+                    success: true,
+                    requiresTwoFactor: true,
+                    mfaMethod: 'email',
+                    message: 'Verification code sent to your email',
+                    userId: user._id
+                });
+
+            } else if (user.mfaMethod === 'totp') {
+                // Require TOTP code
+                return res.status(200).json({
+                    success: true,
+                    requiresTwoFactor: true,
+                    mfaMethod: 'totp',
+                    message: 'Please enter your authenticator code',
+                    userId: user._id
+                });
+            }
         }
 
         // Reset failed login attempts on successful login
         await user.resetLoginAttempts();
+
+        // Track login (detect new device)
+        if (req.trackLogin) await req.trackLogin(user);
 
         // Update last login information
         user.lastLoginAt = new Date();
@@ -196,6 +279,13 @@ exports.loginUser = async (req, res) => {
 // Logout User
 exports.logoutUser = async (req, res) => {
     try {
+        // Blacklist component (if token exists)
+        const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+        if (token) {
+            const { addToBlacklist } = require('../utils/tokenBlacklist');
+            addToBlacklist(token);
+        }
+
         // Clear the token cookie
         clearTokenCookie(res);
 
@@ -220,3 +310,173 @@ exports.logoutUser = async (req, res) => {
     }
 };
 
+// Verify Email
+exports.verifyEmail = async (req, res) => {
+    const { token } = req.params;
+
+    try {
+        // Find verification token
+        const verificationToken = await VerificationToken.findOne({
+            token,
+            type: 'email_verification'
+        });
+
+        if (!verificationToken) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid verification link"
+            });
+        }
+
+        // Check if token has expired
+        if (new Date() > verificationToken.expiresAt) {
+            await VerificationToken.deleteOne({ _id: verificationToken._id });
+            return res.status(400).json({
+                success: false,
+                message: "Verification link has expired. Please request a new one.",
+                expired: true
+            });
+        }
+
+        // Find and update user
+        const user = await User.findById(verificationToken.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // Check if already verified
+        if (user.emailVerified) {
+            return res.status(200).json({
+                success: true,
+                message: "Email is already verified. You can now log in.",
+                alreadyVerified: true
+            });
+        }
+
+        // Mark email as verified
+        user.emailVerified = true;
+        user.verificationToken = undefined;
+        user.verificationExpiry = undefined;
+        await user.save();
+
+        // Delete verification token
+        await VerificationToken.deleteOne({ _id: verificationToken._id });
+
+        // Send welcome email
+        try {
+            await sendWelcomeEmail(user);
+        } catch (emailError) {
+            console.error('Welcome email failed:', emailError);
+            // Continue even if welcome email fails
+        }
+
+        // Log audit event
+        logAudit('EMAIL_VERIFIED', user._id, {
+            username: user.username,
+            email: user.email,
+            ip: req.ip
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Email verified successfully! You can now log in to your account."
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// Resend Verification Email
+exports.resendVerification = async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({
+            success: false,
+            message: "Email is required"
+        });
+    }
+
+    try {
+        // Find user
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            // Don't reveal if user exists
+            return res.status(200).json({
+                success: true,
+                message: "If an account with this email exists and is unverified, a verification email has been sent."
+            });
+        }
+
+        // Check if already verified
+        if (user.emailVerified) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is already verified. You can log in to your account."
+            });
+        }
+
+        // Delete old verification tokens
+        await VerificationToken.deleteMany({
+            userId: user._id,
+            type: 'email_verification'
+        });
+
+        // Generate new verification token
+        const verificationToken = generateSecureToken(32);
+        const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+        // Store new verification token
+        await VerificationToken.create({
+            userId: user._id,
+            token: verificationToken,
+            type: 'email_verification',
+            expiresAt: tokenExpiry
+        });
+
+        // Update user
+        user.verificationToken = verificationToken;
+        user.verificationExpiry = tokenExpiry;
+        await user.save();
+
+        // Send verification email
+        try {
+            await sendVerificationEmail(user, verificationToken);
+        } catch (emailError) {
+            console.error('Email sending failed:', emailError);
+            return res.status(500).json({
+                success: false,
+                message: "Failed to send verification email. Please try again later."
+            });
+        }
+
+        // Log audit event
+        logAudit('VERIFICATION_RESENT', user._id, {
+            username: user.username,
+            email: user.email,
+            ip: req.ip
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Verification email sent. Please check your inbox."
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};

@@ -8,6 +8,7 @@ import { FaEdit, FaTrashAlt, FaSignOutAlt } from "react-icons/fa";
 import LogoutModal from "../components/profile/LogoutModal";
 import DeleteProfileModal from "../components/profile/DeleteProfileModal";
 import EditProfile from "../components/profile/EditProfile";
+import MFASettings from "../components/profile/MFASettings";
 import { useNavigate } from "react-router-dom";
 
 const UserProfilePage = () => {
@@ -143,6 +144,10 @@ const UserProfilePage = () => {
             </div>
           )}
         </div>
+
+        {/* MFA Settings */}
+        {!isEditing && <MFASettings />}
+
       </div>
 
       {/* Modals */}

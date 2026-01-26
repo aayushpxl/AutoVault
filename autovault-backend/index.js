@@ -17,6 +17,7 @@ const savedVehicleRoute = require("./routes/savedVehicleRoute");
 const reviewRoute = require("./routes/reviewRouter");
 const vehicleRoute = require("./routes/vehicleRoute");
 const userRoute = require("./routes/userRoute");
+const mfaRoute = require("./routes/mfaRoute");
 
 // Connect to MongoDB
 connectDB();
@@ -94,6 +95,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // ============ API ROUTES ============
 
 app.use("/api/auth", userRoute);
+app.use("/api/mfa", mfaRoute);
 app.use("/api/admin/user", adminUserRoute);
 app.use("/api/admin/vehicle", adminVehicleRoute);
 app.use("/api/bookings", bookingRoute);

@@ -39,12 +39,29 @@ const UserSchema = new mongoose.Schema(
       default: false
     },
     twoFactorSecret: String, // For TOTP-based 2FA (future enhancement)
+    mfaMethod: {
+      type: String,
+      enum: ['none', 'email', 'totp'],
+      default: 'none'
+    },
     otpCode: String, // Current OTP code
     otpExpiry: Date, // OTP expiration time
+    otpAttempts: {
+      type: Number,
+      default: 0
+    },
     otpVerified: {
       type: Boolean,
       default: false
     },
+
+    // Email Verification
+    emailVerified: {
+      type: Boolean,
+      default: false
+    },
+    verificationToken: String,
+    verificationExpiry: Date,
 
     // Account Status & Security
     accountStatus: {
@@ -71,7 +88,6 @@ const UserSchema = new mongoose.Schema(
 );
 
 // Index for faster queries
-UserSchema.index({ email: 1 });
 UserSchema.index({ accountStatus: 1 });
 
 // Method to check if account is locked
@@ -106,6 +122,16 @@ UserSchema.methods.resetLoginAttempts = function () {
     $set: { failedLoginAttempts: 0 },
     $unset: { accountLockedUntil: 1 }
   });
+};
+
+// Method to check if email is verified
+UserSchema.methods.isEmailVerified = function () {
+  return this.emailVerified === true;
+};
+
+// Method to check if user requires MFA
+UserSchema.methods.requiresMFA = function () {
+  return this.twoFactorEnabled === true && this.mfaMethod !== 'none';
 };
 
 module.exports = mongoose.model("User", UserSchema);

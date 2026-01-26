@@ -219,7 +219,14 @@ const RegisterForm = () => {
         {isPending ? "Registering..." : "Create Account"}
       </button>
 
-      {isSuccess && <p className="text-green-600 text-sm text-center mt-3">{data.message}</p>}
+      {isSuccess && (
+        <div className={`mt-4 p-3 rounded-lg text-sm text-center ${data.requiresVerification ? "bg-green-50 text-green-700 border border-green-200" : "text-green-600"}`}>
+          {data.requiresVerification && (
+            <div className="font-bold mb-1">Registration Successful!</div>
+          )}
+          {data.message}
+        </div>
+      )}
       {isError && <p className="text-red-500 text-sm text-center mt-3">{error.message}</p>}
 
       <p className="text-xs text-gray-400 text-center mt-4">

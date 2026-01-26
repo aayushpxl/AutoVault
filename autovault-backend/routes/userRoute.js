@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // Import controller functions
-const { registerUser, loginUser, logoutUser } = require("../controllers/userController");
+const { registerUser, loginUser, logoutUser, verifyEmail, resendVerification } = require("../controllers/userController");
 const {
   updateOneUser,
   deleteOneUser,
@@ -14,15 +14,21 @@ const {
 
 // Import middlewares
 const { authenticateUser } = require('../middlewares/authenticateUser');
-const { registrationLimiter, loginLimiter } = require('../middlewares/rateLimiter');
+const { registrationLimiter, loginLimiter, strictLimiter } = require('../middlewares/rateLimiter');
 const { verifyRecaptcha } = require('../middlewares/recaptcha');
+
+const { ipTracker } = require('../middlewares/ipTracker');
 
 // --- Public Routes ---
 // Registration with rate limiting and reCAPTCHA protection
 router.post('/register', registrationLimiter, verifyRecaptcha, registerUser);
 
-// Login with rate limiting
-router.post('/login', loginLimiter, loginUser);
+// Email Verification
+router.get('/verify-email/:token', verifyEmail);
+router.post('/resend-verification', strictLimiter, resendVerification);
+
+// Login with rate limiting and IP tracking
+router.post('/login', loginLimiter, ipTracker, loginUser);
 
 // Logout (requires authentication)
 router.post('/logout', authenticateUser, logoutUser);

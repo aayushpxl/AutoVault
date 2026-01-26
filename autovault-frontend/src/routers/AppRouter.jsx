@@ -17,6 +17,7 @@ import SearchResultsPage from "../components/Search/SearchResultsPage";
 import UserProfilePage from "../pages/UserProfilePage";
 import AboutUs from "../pages/AboutUs";
 import ResetPasswordPage from "../components/auth/ResetPasswordPage";
+import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
 import AdminProfilePage from "../components/admin/AdminProfilePage";
 
 
@@ -38,7 +39,7 @@ const AppRouter = () => {
           <Route path="vehicles" element={<VehicleDetailsTable />} />
           <Route path="vehicles/create" element={<CreateVehicleForm />} />
           <Route path="bookings" element={<BookingTable />} />
-          <Route path="setting" element={<AdminProfilePage/>} />
+          <Route path="setting" element={<AdminProfilePage />} />
         </Route>
       </Route>
 
@@ -48,9 +49,9 @@ const AppRouter = () => {
           <Route path="/mybooking" element={<MyBookingPage />} />
           <Route path="/savedvehicle" element={<SavedVehicle />} />
           <Route path="/vehicles/:id" element={<VehicleDetailPage />} />
-          <Route path="/search" element={<SearchResultsPage />} /> 
-          <Route path="/profile" element={<UserProfilePage />} /> 
-          <Route path="/about" element={<AboutUs />} /> 
+          <Route path="/search" element={<SearchResultsPage />} />
+          <Route path="/profile" element={<UserProfilePage />} />
+          <Route path="/about" element={<AboutUs />} />
         </Route>
       </Route>
 
@@ -59,6 +60,7 @@ const AppRouter = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+      <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
 
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/login" replace />} />

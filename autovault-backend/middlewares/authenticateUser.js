@@ -1,5 +1,6 @@
 const { extractToken, verifyToken } = require("../utils/jwtHandler");
 const User = require("../models/User");
+const { isBlacklisted } = require("../utils/tokenBlacklist");
 
 exports.authenticateUser = async (req, res, next) => {
     try {
@@ -8,17 +9,22 @@ exports.authenticateUser = async (req, res, next) => {
 
         // DEBUG LOGGING
         if (process.env.NODE_ENV === 'development') {
-            console.log('--- Auth Debug ---');
-            console.log('Cookies:', req.cookies); // Using cookie-parser
-            console.log('Auth Header:', req.headers.authorization);
-            console.log('Extracted Token:', token ? token.substring(0, 15) + '...' : 'None');
-            console.log('------------------');
+            // console.log('--- Auth Debug ---');
+            // console.log('Extracted Token:', token ? token.substring(0, 15) + '...' : 'None');
         }
 
         if (!token) {
             return res.status(401).json({
                 success: false,
                 message: "Authentication required. Please login."
+            });
+        }
+
+        // Check blacklist
+        if (isBlacklisted(token)) {
+            return res.status(401).json({
+                success: false,
+                message: "Session expired. Please login again."
             });
         }
 
