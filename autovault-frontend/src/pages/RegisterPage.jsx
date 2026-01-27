@@ -2,7 +2,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import Logo from "../assets/logo.png";
+import Logo from "../assets/autovaultlogo.png";
 import Illustration from "../assets/illustration.png";
 import RegisterForm from "../components/auth/RegisterForm";
 

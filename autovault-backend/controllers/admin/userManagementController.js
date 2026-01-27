@@ -2,6 +2,7 @@ const User = require("../../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const { validatePassword, addToPasswordHistory } = require("../../utils/passwordValidator");
 
 // Register User
 exports.createUser = async (req, res) => {
@@ -221,6 +222,8 @@ exports.updateLoggedInUserProfile = async (req, res) => {
       }
 
       const user = await User.findById(req.user._id);
+
+      // Verify current password
       const isMatch = await bcrypt.compare(currentPassword, user.password);
       if (!isMatch) {
         return res.status(400).json({
@@ -229,17 +232,21 @@ exports.updateLoggedInUserProfile = async (req, res) => {
         });
       }
 
-      // Strong password validation
-      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,32}$/;
-      if (!passwordRegex.test(newPassword)) {
+      // Comprehensive password validation (History, Strength, Personal Info)
+      const passwordValidation = await validatePassword(newPassword, user);
+      if (!passwordValidation.isValid) {
         return res.status(400).json({
           success: false,
-          message: "New password must be 8-32 characters long and include uppercase, lowercase, and one number",
+          message: passwordValidation.errors[0],
         });
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       updateFields.password = hashedPassword;
+
+      // Add to password history and update change timestamp
+      addToPasswordHistory(user, hashedPassword);
+      await user.save(); // Save history updates to user document
     }
 
     const updatedUser = await User.findByIdAndUpdate(

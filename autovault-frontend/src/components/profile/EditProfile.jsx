@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const EditProfile = ({ initialData, onSave, isPending, onCancel }) => {
   const [formData, setFormData] = useState(initialData);
@@ -6,6 +7,10 @@ const EditProfile = ({ initialData, onSave, isPending, onCancel }) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     setFormData(initialData);
@@ -43,6 +48,10 @@ const EditProfile = ({ initialData, onSave, isPending, onCancel }) => {
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,32}$/;
       if (!passwordRegex.test(newPassword)) {
         setError("New password must be 8-32 characters with upper, lower, & number");
+        return;
+      }
+      if (newPassword === currentPassword) {
+        setError("New password cannot be the same as your current password.");
         return;
       }
       if (newPassword !== confirmPassword) {
@@ -169,23 +178,41 @@ const EditProfile = ({ initialData, onSave, isPending, onCancel }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Current Password
             </label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full bg-transparent border-b border-gray-300 focus:outline-none focus:border-black py-2"
-            />
+            <div className="relative">
+              <input
+                type={showCurrentPassword ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full bg-transparent border-b border-gray-300 focus:outline-none focus:border-black py-2 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword((prev) => !prev)}
+                className="absolute right-0 bottom-2 text-gray-400 hover:text-black focus:outline-none bg-transparent p-0 border-none shadow-none hover:shadow-none transform-none hover:transform-none"
+              >
+                {showCurrentPassword ? <FaEye size={16} /> : <FaEyeSlash size={16} />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               New Password
             </label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full bg-transparent border-b border-gray-300 focus:outline-none focus:border-black py-2"
-            />
+            <div className="relative">
+              <input
+                type={showNewPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full bg-transparent border-b border-gray-300 focus:outline-none focus:border-black py-2 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword((prev) => !prev)}
+                className="absolute right-0 bottom-2 text-gray-400 hover:text-black focus:outline-none bg-transparent p-0 border-none shadow-none hover:shadow-none transform-none hover:transform-none"
+              >
+                {showNewPassword ? <FaEye size={16} /> : <FaEyeSlash size={16} />}
+              </button>
+            </div>
             {/* Password Strength Indicator */}
             {newPassword && (
               <div className="mt-2 text-left">
@@ -240,12 +267,21 @@ const EditProfile = ({ initialData, onSave, isPending, onCancel }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Confirm Password
             </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-transparent border-b border-gray-300 focus:outline-none focus:border-black py-2"
-            />
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full bg-transparent border-b border-gray-300 focus:outline-none focus:border-black py-2 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                className="absolute right-0 bottom-2 text-gray-400 hover:text-black focus:outline-none bg-transparent p-0 border-none shadow-none hover:shadow-none transform-none hover:transform-none"
+              >
+                {showConfirmPassword ? <FaEye size={16} /> : <FaEyeSlash size={16} />}
+              </button>
+            </div>
           </div>
         </div>
 

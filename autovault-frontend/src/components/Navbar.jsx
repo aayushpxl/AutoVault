@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Menu, X, Search } from "lucide-react";
-import logo from "../assets/logo.png";
+import logo from "../assets/autovaultlogo.png";
 
 const navItems = [
   { name: "Home", path: "/home" },
@@ -28,38 +28,44 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 w-full bg-slate-900/80 backdrop-blur-md border-b border-white/5 z-50 transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <nav className="fixed top-0 left-0 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/60 z-50 transition-all duration-300">
+      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
         {/* Logo */}
         <NavLink to="/home" className="flex items-center group">
           <img
             src={logo}
             alt="AutoVault Logo"
-            className="h-10 w-auto transition-transform duration-300 group-hover:scale-105"
+            className="h-16 w-auto transition-all duration-300 group-hover:scale-105"
           />
         </NavLink>
 
         {/* Desktop menu */}
-        <ul className="hidden md:flex space-x-8 text-sm font-medium">
+        <ul className="hidden md:flex space-x-10 text-sm font-semibold">
           {navItems.map(({ name, path }) => (
             <li key={name}>
               <NavLink
                 to={path}
                 className={({ isActive }) =>
                   isActive
-                    ? "text-accent font-semibold border-b-2 border-accent pb-1 tracking-wide transition-all duration-300"
-                    : "text-white/90 hover:text-accent transition-all duration-300 tracking-wide relative group"
+                    ? "text-primary relative tracking-wide"
+                    : "text-slate-600 hover:text-primary transition-all duration-300 tracking-wide"
                 }
               >
-                {name}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
+                {({ isActive }) => (
+                  <>
+                    {name}
+                    {isActive && (
+                      <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary rounded-full"></span>
+                    )}
+                  </>
+                )}
               </NavLink>
             </li>
           ))}
         </ul>
 
         {/* Search bar (desktop) */}
-        <div className="hidden md:flex items-center space-x-3">
+        <div className="hidden md:flex items-center space-x-4">
           <div className="relative group">
             <input
               type="text"
@@ -67,13 +73,13 @@ export default function Navbar() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Find your perfect ride..."
-              className="border border-white/10 bg-white/5 rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-accent focus:bg-white/10 w-72 transition-all duration-300 hover:bg-white/10"
+              className="border border-slate-200 bg-slate-50 rounded-full pl-10 pr-4 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white w-64 transition-all duration-300"
             />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-white transition-colors w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-4 h-4" />
           </div>
           <button
             onClick={handleSearch}
-            className="bg-accent hover:bg-accent/90 text-white text-sm font-bold rounded-full px-6 py-2.5 transition-all duration-300 shadow-lg hover:shadow-accent/50"
+            className="bg-primary hover:bg-primary/90 text-white text-xs font-bold uppercase tracking-wider rounded-full px-6 py-2 transition-all duration-300 shadow-md hover:shadow-lg active:scale-95"
           >
             Search
           </button>
@@ -81,7 +87,7 @@ export default function Navbar() {
 
         {/* Mobile menu button */}
         <button
-          className="md:hidden p-2 text-white hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent rounded-lg transition-all duration-300"
+          className="md:hidden p-2 text-slate-600 hover:text-primary focus:outline-none rounded-lg transition-all duration-300"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle menu"
         >
@@ -91,8 +97,8 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden bg-primary/98 backdrop-blur-lg border-t border-white/10 px-6 py-6 space-y-5 animate-slideInLeft">
-          <ul className="flex flex-col space-y-4 text-sm font-medium">
+        <div className="md:hidden bg-white/95 backdrop-blur-lg border-t border-slate-100 px-6 py-6 space-y-6 animate-fadeInUp">
+          <ul className="flex flex-col space-y-4 text-sm font-semibold">
             {navItems.map(({ name, path }) => (
               <li key={name}>
                 <NavLink
@@ -100,17 +106,17 @@ export default function Navbar() {
                   onClick={() => setMenuOpen(false)}
                   className={({ isActive }) =>
                     isActive
-                      ? "text-accent font-semibold flex items-center space-x-2"
-                      : "text-white/90 hover:text-accent transition-all duration-300 flex items-center space-x-2"
+                      ? "text-primary flex items-center space-x-3"
+                      : "text-slate-600 hover:text-primary transition-all duration-300 flex items-center space-x-3"
                   }
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent"></span>
+                  <span className={`w-1.5 h-1.5 rounded-full ${path === window.location.pathname ? 'bg-primary' : 'bg-slate-200'}`}></span>
                   <span>{name}</span>
                 </NavLink>
               </li>
             ))}
           </ul>
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col space-y-3 pt-4 border-t border-slate-100">
             <div className="relative">
               <input
                 type="text"
@@ -118,13 +124,13 @@ export default function Navbar() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Search vehicles..."
-                className="w-full border border-white/20 bg-white/10 backdrop-blur-sm rounded-lg pl-10 pr-3 py-2.5 text-sm text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full border border-slate-200 bg-slate-50 rounded-lg pl-10 pr-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
             </div>
             <button
               onClick={handleSearch}
-              className="bg-gradient-secondary text-white rounded-lg px-4 py-2.5 text-sm font-semibold hover:shadow-glow-orange transition-all duration-300"
+              className="bg-primary text-white rounded-lg px-4 py-2.5 text-sm font-bold shadow-md active:scale-95 transition-all"
             >
               Search
             </button>

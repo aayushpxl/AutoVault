@@ -5,7 +5,7 @@ import { useLoginUser } from "../../hooks/useLoginUser";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEnvelope, FaEye, FaEyeSlash, FaLock, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import Logo from "../../assets/logo.png";
+import Logo from "../../assets/autovaultlogo.png";
 import { AuthContext } from "../../auth/AuthProvider";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
