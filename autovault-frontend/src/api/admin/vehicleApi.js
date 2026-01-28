@@ -1,11 +1,11 @@
 import axios from "../Api";
 
 // Get all vehicles
-export const getAllVehicleApi = (params) => 
-  axios.get("/admin/vehicle/", { params });
+export const getAllVehicleApi = (params) =>
+  axios.get("/vehicles/", { params });
 
 // Create a new vehicle with possible image upload (multipart/form-data)
-export const createVehicleApi = (data) => 
+export const createVehicleApi = (data) =>
   axios.post("/admin/vehicle/create", data, {
     headers: {
       "Content-Type": "multipart/form-data"
@@ -13,11 +13,11 @@ export const createVehicleApi = (data) =>
   });
 
 // Get single vehicle by ID
-export const getOneVehicleApi = (id) => 
-  axios.get(`/admin/vehicle/${id}`);
+export const getOneVehicleApi = (id) =>
+  axios.get(`/vehicles/${id}`);
 
 // Update vehicle by ID with possible image upload (multipart/form-data)
-export const updateOneVehicleApi = (id, data) => 
+export const updateOneVehicleApi = (id, data) =>
   axios.put(`/admin/vehicle/${id}`, data, {
     headers: {
       "Content-Type": "multipart/form-data"
@@ -25,8 +25,8 @@ export const updateOneVehicleApi = (id, data) =>
   });
 
 // Delete vehicle by ID
-export const deleteOneVehicleApi = (id) => 
+export const deleteOneVehicleApi = (id) =>
   axios.delete(`/admin/vehicle/${id}`);
 
-export const getVehicleTypesApi = () => 
+export const getVehicleTypesApi = () =>
   axios.get("/vehicles/types");

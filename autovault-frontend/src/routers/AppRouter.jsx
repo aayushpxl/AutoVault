@@ -23,6 +23,8 @@ import AuditLogPage from "../pages/admin/AuditLogPage";
 import AdminRoute from "./AdminRoute";
 import UserRoute from "./UserRoute";
 import SavedVehicle from "../pages/SavedVehicle";
+import PaymentSuccess from "../pages/PaymentSuccess";
+import PaymentFailure from "../pages/PaymentFailure";
 
 const AppRouter = () => {
   return (
@@ -52,6 +54,8 @@ const AppRouter = () => {
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/profile" element={<UserProfilePage />} />
           <Route path="/about" element={<AboutUs />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-failure" element={<PaymentFailure />} />
         </Route>
       </Route>
 

@@ -7,7 +7,7 @@ import {
     verifyMFASetupApi,
     disableMFAApi
 } from "../../api/authApi";
-import { FaShieldAlt, FaCheckCircle, FaTimes, FaKey } from "react-icons/fa";
+import { FaShieldAlt, FaCheckCircle, FaTimes, FaKey, FaMobileAlt, FaCopy } from "react-icons/fa";
 
 const MFASettings = () => {
     const [status, setStatus] = useState("loading"); // loading, enabled, disabled
@@ -17,6 +17,7 @@ const MFASettings = () => {
     const [disablePassword, setDisablePassword] = useState("");
     const [showDisableModal, setShowDisableModal] = useState(false);
     const [backupCodes, setBackupCodes] = useState([]);
+    const [manualEntry, setManualEntry] = useState(false);
 
     useEffect(() => {
         fetchStatus();
@@ -36,6 +37,14 @@ const MFASettings = () => {
         }
     };
 
+    const handleToggleMFA = () => {
+        if (status === "enabled") {
+            setShowDisableModal(true);
+        } else {
+            handleStartSetup();
+        }
+    };
+
     const handleStartSetup = async () => {
         try {
             const res = await setupMFAApi();
@@ -44,12 +53,16 @@ const MFASettings = () => {
                 setSetupStep("qr");
             }
         } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to start MFA setup");
+            if (!err.response?.data?.securityStatus) {
+                toast.error(err.response?.data?.message || "Failed to start MFA setup");
+            }
         }
     };
 
     const handleVerifySetup = async () => {
-        if (!verifyCode) return toast.error("Please enter the code");
+        if (!verifyCode || verifyCode.length !== 6) {
+            return toast.error("Please enter a valid 6-digit code");
+        }
 
         try {
             const res = await verifyMFASetupApi({ code: verifyCode });
@@ -64,7 +77,9 @@ const MFASettings = () => {
                 toast.success("Two-Factor Authentication Enabled!");
             }
         } catch (err) {
-            toast.error(err.response?.data?.message || "Invalid code");
+            if (!err.response?.data?.securityStatus) {
+                toast.error(err.response?.data?.message || "Invalid code");
+            }
         }
     };
 
@@ -77,166 +92,266 @@ const MFASettings = () => {
             setStatus("disabled");
             setShowDisableModal(false);
             setDisablePassword("");
+            setSetupStep("idle");
             toast.success("Two-Factor Authentication Disabled");
         } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to disable MFA");
+            if (!err.response?.data?.securityStatus) {
+                toast.error(err.response?.data?.message || "Failed to disable MFA");
+            }
         }
+    };
+
+    const copyToClipboard = (text, message) => {
+        navigator.clipboard.writeText(text);
+        toast.info(message || "Copied to clipboard");
     };
 
     if (status === "loading") return <div className="p-4 bg-white rounded-xl border animate-pulse h-32"></div>;
 
     return (
-        <div className="bg-white shadow-sm border rounded-xl p-6">
-            <div className="flex items-start justify-between">
-                <div>
-                    <div className="flex items-center gap-2 mb-2">
-                        <FaShieldAlt className={`text-xl ${status === "enabled" ? "text-green-600" : "text-gray-400"}`} />
-                        <h3 className="text-lg font-semibold text-gray-900">Two-Factor Authentication</h3>
+        <div className="bg-white shadow-sm border rounded-xl p-6 transition-all duration-300">
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                    <div className={`p-3 rounded-lg ${status === "enabled" ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"}`}>
+                        <FaShieldAlt className="text-2xl" />
                     </div>
-
-                    <p className="text-sm text-gray-500 max-w-xl">
-                        Add an extra layer of security to your account by requiring a verification code from your
-                        authenticator app (like Google Authenticator) when you log in.
-                    </p>
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-900">Two-Factor Authentication (2FA)</h3>
+                        <p className="text-sm text-gray-500">
+                            Secure your account with an extra verification step.
+                        </p>
+                    </div>
                 </div>
 
-                {status === "enabled" ? (
-                    <div className="flex flex-col items-end gap-2">
-                        <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
-                            <FaCheckCircle /> Enabled
-                        </span>
-                        <button
-                            onClick={() => setShowDisableModal(true)}
-                            className="text-sm text-red-600 hover:text-red-800 hover:underline"
-                        >
-                            Disable MFA
-                        </button>
-                    </div>
-                ) : (
-                    <button
-                        onClick={handleStartSetup}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
-                    >
-                        Enable 2FA
-                    </button>
-                )}
+                <div className="flex items-center gap-3">
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full uppercase tracking-wider ${status === 'enabled' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                        {status === 'enabled' ? 'Active' : 'Inactive'}
+                    </span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={status === "enabled"}
+                            onChange={handleToggleMFA}
+                        />
+                        <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none ring-offset-2 peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
             </div>
 
-            {/* Setup Flow */}
+            {/* Setup Progress */}
             {status === "disabled" && setupStep === "qr" && qrData && (
-                <div className="mt-6 border-t pt-6 animate-fade-in">
-                    <div className="flex flex-col md:flex-row gap-8">
-                        <div className="flex-shrink-0">
-                            <QRCodeSVG value={qrData.otpauthUrl || "otpauth://totp/AutoVault?secret=" + qrData.manualEntrySecret} size={160} className="border p-2 rounded" />
-                        </div>
-                        <div className="flex-1">
-                            <h4 className="font-medium mb-2">1. Scan QR Code</h4>
-                            <p className="text-sm text-gray-600 mb-4">
-                                Open your authenticator app (Google Authenticator, Authy, etc.) and scan the QR code.
-                            </p>
-                            <p className="text-xs text-gray-500 mb-4">
-                                Can't scan? Enter this code manually: <span className="font-mono bg-gray-100 p-1 rounded select-all">{qrData.manualEntrySecret}</span>
+                <div className="mt-8 border-t pt-8 animate-fadeInUp">
+                    <div className="grid md:grid-cols-2 gap-10">
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-3">
+                                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">1</span>
+                                <h4 className="font-bold text-gray-800 text-lg">Scan QR Code</h4>
+                            </div>
+
+                            <p className="text-sm text-gray-600">
+                                Open Google Authenticator or any TOTP app and scan the code below.
                             </p>
 
-                            <h4 className="font-medium mb-2">2. Enter Verification Code</h4>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={verifyCode}
-                                    onChange={(e) => setVerifyCode(e.target.value.trim())}
-                                    placeholder="000 000"
-                                    className="border rounded-lg px-4 py-2 w-32 text-center text-lg tracking-wider focus:outline-blue-500"
-                                    maxLength={6}
-                                />
+                            <div className="flex flex-col items-center bg-gray-50 p-6 rounded-2xl border border-dashed border-gray-300">
+                                {!manualEntry ? (
+                                    <>
+                                        <div className="bg-white p-4 rounded-xl shadow-sm border mb-4">
+                                            <QRCodeSVG
+                                                value={qrData.otpauthUrl || `otpauth://totp/AutoVault?secret=${qrData.manualEntrySecret}`}
+                                                size={180}
+                                                level="H"
+                                                includeMargin={true}
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={() => setManualEntry(true)}
+                                            className="text-xs text-blue-600 font-medium hover:underline"
+                                        >
+                                            Can't scan? Use setup key
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="w-full space-y-4">
+                                        <div className="p-4 bg-white border rounded-xl">
+                                            <p className="text-xs text-gray-400 mb-1 uppercase font-bold tracking-widest">Setup Key</p>
+                                            <div className="flex items-center justify-between">
+                                                <code className="text-sm font-mono font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded">{qrData.manualEntrySecret}</code>
+                                                <button onClick={() => copyToClipboard(qrData.manualEntrySecret, "Secret copied")} className="text-gray-400 hover:text-blue-600 transition">
+                                                    <FaCopy size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => setManualEntry(false)}
+                                            className="text-xs text-blue-600 font-medium hover:underline w-full text-center"
+                                        >
+                                            Back to QR code
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-3">
+                                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
+                                <h4 className="font-bold text-gray-800 text-lg">Verify Setup</h4>
+                            </div>
+
+                            <p className="text-sm text-gray-600">
+                                Enter the 6-digit code generated by your app.
+                            </p>
+
+                            <div className="space-y-4">
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={verifyCode}
+                                        onChange={(e) => setVerifyCode(e.target.value.replace(/[^0-9]/g, ""))}
+                                        placeholder="000000"
+                                        className="w-full border-2 border-gray-200 rounded-2xl px-6 py-4 text-center text-3xl font-bold tracking-[0.5em] focus:border-blue-500 focus:outline-none transition-colors"
+                                        maxLength={6}
+                                        autoFocus
+                                    />
+                                </div>
+
                                 <button
                                     onClick={handleVerifySetup}
-                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-100 transition-all flex items-center justify-center gap-2"
                                 >
-                                    Verify & Enable
+                                    Activate 2FA
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        setSetupStep("idle");
+                                        setQrData(null);
+                                        setVerifyCode("");
+                                    }}
+                                    className="w-full text-gray-400 hover:text-gray-600 text-sm font-medium py-2"
+                                >
+                                    Cancel Setup
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <button onClick={() => setSetupStep("idle")} className="text-gray-400 hover:text-gray-600 text-sm mt-4">Cancel Setup</button>
                 </div>
             )}
 
-            {/* Success View with Backup Codes */}
+            {/* Success View */}
             {setupStep === "success" && (
-                <div className="mt-6 border-t pt-6">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                        <div className="flex items-center gap-2 text-green-700 font-semibold mb-2">
-                            <FaCheckCircle /> Setup Complete!
+                <div className="mt-8 border-t pt-8 animate-fadeInUp">
+                    <div className="bg-green-50 rounded-2xl p-6 border border-green-100 flex items-start gap-4 mb-8">
+                        <FaCheckCircle className="text-3xl text-green-500 mt-1" />
+                        <div>
+                            <h4 className="font-bold text-green-800 text-lg">2FA successfully activated!</h4>
+                            <p className="text-sm text-green-600">
+                                Your account is now more secure. Please save these backup codes in a safe place.
+                            </p>
                         </div>
-                        <p className="text-sm text-green-600">
-                            Two-factor authentication is now enabled on your account.
-                        </p>
                     </div>
 
                     {backupCodes.length > 0 && (
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <FaKey className="text-gray-500" />
-                                <h4 className="font-medium">Backup Codes</h4>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <FaKey className="text-gray-400" />
+                                    <h5 className="font-bold text-gray-800">Backup Recovery Codes</h5>
+                                </div>
+                                <button
+                                    onClick={() => copyToClipboard(backupCodes.join('\n'), "All backup codes copied")}
+                                    className="text-xs text-blue-600 font-bold flex items-center gap-1 hover:underline"
+                                >
+                                    <FaCopy /> Copy All
+                                </button>
                             </div>
-                            <p className="text-sm text-gray-600 mb-4">
-                                Save these backup codes in a safe place. You can use them to log in if you lose access to your authenticator app.
-                            </p>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 bg-gray-50 p-4 rounded-lg border border-gray-200 font-mono text-sm">
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                 {backupCodes.map((code, index) => (
-                                    <div key={index} className="text-center bg-white border rounded py-1 select-all hover:bg-gray-100">
+                                    <div key={index} className="bg-gray-50 border rounded-xl py-2 px-3 text-center font-mono text-sm font-bold text-gray-700 select-all hover:bg-white hover:border-blue-200 transition-all">
                                         {code}
                                     </div>
                                 ))}
                             </div>
-                            <div className="mt-2 text-xs text-red-500">
-                                * These codes will only be shown once. Copy them now!
-                            </div>
+
+                            <p className="text-xs text-red-400 bg-red-50 p-3 rounded-lg flex items-center gap-2">
+                                <FaTimes className="flex-shrink-0" />
+                                <span>Note: These codes are shown only once. Lost codes cannot be recovered.</span>
+                            </p>
                         </div>
                     )}
-                    <button onClick={() => setSetupStep("idle")} className="bg-gray-800 text-white px-4 py-2 rounded mt-4 text-sm">Done</button>
+
+                    <button
+                        onClick={() => setSetupStep("idle")}
+                        className="bg-gray-900 hover:bg-black text-white px-8 py-3 rounded-xl mt-8 font-bold transition-all shadow-lg"
+                    >
+                        I've saved the codes
+                    </button>
+                </div>
+            )}
+
+            {/* Status Information */}
+            {setupStep === "idle" && (
+                <div className="mt-8 bg-blue-50 rounded-2xl p-6 border border-blue-100">
+                    <div className="flex items-start gap-4">
+                        <div className="p-3 bg-white rounded-xl shadow-sm text-blue-600">
+                            <FaMobileAlt size={24} />
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-blue-900">How it works</h4>
+                            <p className="text-sm text-blue-800/70 mt-1 max-w-2xl leading-relaxed">
+                                Once enabled, you'll be prompted for a 6-digit code from your authenticator app whenever you sign in. This ensures that only you can access your account, even if someone knows your password.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             )}
 
             {/* Disable Modal */}
             {showDisableModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl p-6 max-w-md w-full m-4">
-                        <div className="flex justify-between items-start mb-4">
-                            <h3 className="text-lg font-bold text-gray-900">Disable 2FA?</h3>
-                            <button onClick={() => setShowDisableModal(false)} className="text-gray-400 hover:text-gray-600">
-                                <FaTimes />
+                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+                    <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-fadeInUp">
+                        <div className="flex justify-between items-start mb-6">
+                            <div className="p-4 bg-red-50 text-red-600 rounded-2xl">
+                                <FaShieldAlt size={28} />
+                            </div>
+                            <button onClick={() => setShowDisableModal(false)} className="text-gray-400 hover:text-gray-600 p-2">
+                                <FaTimes size={20} />
                             </button>
                         </div>
 
-                        <p className="text-sm text-gray-600 mb-4">
-                            Are you sure you want to disable Two-Factor Authentication? Your account will be less secure.
+                        <h3 className="text-2xl font-black text-gray-900 mb-2">Disable Security?</h3>
+                        <p className="text-gray-500 mb-8 leading-relaxed">
+                            Removing Two-Factor Authentication will make your account significantly less secure. Are you sure you want to proceed?
                         </p>
 
-                        <form onSubmit={handleDisableMFA}>
-                            <label className="block text-sm font-medium mb-1">Confirm Password</label>
-                            <input
-                                type="password"
-                                value={disablePassword}
-                                onChange={(e) => setDisablePassword(e.target.value)}
-                                className="w-full border rounded-lg p-2 mb-4"
-                                placeholder="Enter your password"
-                                required
-                            />
+                        <form onSubmit={handleDisableMFA} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2 px-1">Verify Password</label>
+                                <input
+                                    type="password"
+                                    value={disablePassword}
+                                    onChange={(e) => setDisablePassword(e.target.value)}
+                                    className="w-full border-2 border-gray-100 rounded-2xl p-4 focus:border-red-500 focus:outline-none transition-all"
+                                    placeholder="••••••••"
+                                    required
+                                />
+                            </div>
 
-                            <div className="flex justify-end gap-3">
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    type="submit"
+                                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-red-100"
+                                >
+                                    Disable Security
+                                </button>
                                 <button
                                     type="button"
                                     onClick={() => setShowDisableModal(false)}
-                                    className="text-gray-600 hover:text-gray-800 text-sm px-3 py-2"
+                                    className="w-full text-gray-500 hover:text-gray-700 font-bold py-2"
                                 >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm"
-                                >
-                                    Disable 2FA
+                                    Better keep it on
                                 </button>
                             </div>
                         </form>

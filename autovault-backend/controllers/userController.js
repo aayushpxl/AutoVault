@@ -55,7 +55,7 @@ exports.registerUser = async (req, res) => {
             email,
             password: hashedPassword,
             role: userRole,
-            emailVerified: isAdmin, // Admins are auto-verified, normal users must verify
+            emailVerified: true, // All users are auto-verified as per new policy
             passwordHistory: [{
                 password: hashedPassword,
                 changedAt: new Date()
@@ -66,33 +66,8 @@ exports.registerUser = async (req, res) => {
         // Save user to the database
         await newUser.save();
 
-        // Only send verification email for normal users
-        if (!isAdmin) {
-            // Generate verification token
-            const verificationToken = generateSecureToken(32);
-            const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-            // Store verification token
-            await VerificationToken.create({
-                userId: newUser._id,
-                token: verificationToken,
-                type: 'email_verification',
-                expiresAt: tokenExpiry
-            });
-
-            // Update user with token reference
-            newUser.verificationToken = verificationToken;
-            newUser.verificationExpiry = tokenExpiry;
-            await newUser.save();
-
-            // Send verification email
-            try {
-                await sendVerificationEmail(newUser, verificationToken);
-            } catch (emailError) {
-                console.error('Email sending failed:', emailError);
-                // Continue even if email fails - user can request resend
-            }
-        }
+        // Mandatory email verification for normal users is now bypassed.
+        // Users are encouraged to setup TOTP for enhanced security.
 
         // Log audit event
         logAudit('USER_REGISTERED', newUser._id, {
@@ -103,20 +78,14 @@ exports.registerUser = async (req, res) => {
             ip: req.ip
         });
 
-        // Return appropriate message based on user role
-        if (isAdmin) {
-            return res.status(201).json({
-                success: true,
-                message: "Admin registration successful! You can now log in.",
-                requiresVerification: false
-            });
-        } else {
-            return res.status(201).json({
-                success: true,
-                message: "Registration successful! Please check your email to verify your account.",
-                requiresVerification: true
-            });
-        }
+        // Return success message
+        return res.status(201).json({
+            success: true,
+            message: isAdmin
+                ? "Admin registration successful! You can now log in."
+                : "Registration successful! You can now log in and manage your account.",
+            requiresVerification: false
+        });
 
     } catch (error) {
         console.error(error);
@@ -150,7 +119,8 @@ exports.loginUser = async (req, res) => {
             });
         }
 
-        // Check if email is verified (skip for admin users)
+        // Email verification block removed to prioritize MFA/TOTP setup flow
+        /* 
         if (!user.isEmailVerified() && user.role !== 'admin') {
             return res.status(403).json({
                 success: false,
@@ -158,13 +128,15 @@ exports.loginUser = async (req, res) => {
                 requiresVerification: true
             });
         }
+        */
 
         // Check if account is locked
         if (user.isAccountLocked()) {
             const lockTime = Math.ceil((user.accountLockedUntil - Date.now()) / 60000);
             return res.status(403).json({
                 success: false,
-                message: `Account is locked due to multiple failed login attempts. Try again in ${lockTime} minutes.`
+                message: `🚫 ACCOUNT LOCKED: Your account is temporarily locked due to multiple failed attempts or security violations. Try again in ${lockTime} minutes.`,
+                securityStatus: 'BLOCKED'
             });
         }
 

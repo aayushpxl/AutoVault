@@ -89,14 +89,24 @@ export default function MyBookingPage() {
                   <h3 className="text-[16px] font-bold text-gray-800 leading-tight line-clamp-1">
                     {booking.vehicleId?.vehicleName || "Unnamed Vehicle"}
                   </h3>
-                  <span
-                    className={`text-[12px] font-medium px-2 py-[2px] rounded-full ${booking.status === "cancelled"
+                  <div className="flex gap-2 items-center">
+                    <span
+                      className={`text-[12px] font-medium px-2 py-[2px] rounded-full ${booking.status === "cancelled"
                         ? "bg-red-100 text-red-500"
                         : "bg-green-100 text-green-600"
-                      }`}
-                  >
-                    {booking.status}
-                  </span>
+                        }`}
+                    >
+                      {booking.status}
+                    </span>
+                    <span
+                      className={`text-[12px] font-medium px-2 py-[2px] rounded-full ${booking.paymentStatus === "paid"
+                        ? "bg-blue-100 text-blue-600"
+                        : "bg-yellow-100 text-yellow-600"
+                        }`}
+                    >
+                      {booking.paymentStatus}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Dates */}
@@ -121,6 +131,34 @@ export default function MyBookingPage() {
                     Price: NPR {booking.totalPrice}
                   </p>
                   <div className="flex gap-3 min-w-[240px] justify-end">
+                    {booking.status !== "cancelled" && booking.paymentStatus === "pending" && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            const res = await axios.post("/payment/initiate-esewa", { bookingId: booking._id });
+                            const { formData, esewa_url } = res.data;
+                            const form = document.createElement("form");
+                            form.method = "POST";
+                            form.action = esewa_url;
+                            for (const key in formData) {
+                              const input = document.createElement("input");
+                              input.type = "hidden";
+                              input.name = key;
+                              input.value = formData[key];
+                              form.appendChild(input);
+                            }
+                            document.body.appendChild(form);
+                            form.submit();
+                          } catch (err) {
+                            console.error("Payment initiation failed", err);
+                          }
+                        }}
+                        className="bg-green-600 hover:bg-green-700 text-white text-[12px] px-3 py-1 rounded-md flex items-center gap-1 shadow-sm"
+                      >
+                        Pay Now
+                      </button>
+                    )}
+
                     {booking.status === "cancelled" ? (
                       <button
                         onClick={() => setUndoModalBookingId(booking._id)}
@@ -141,10 +179,10 @@ export default function MyBookingPage() {
 
                     <button
                       onClick={() => openEditModal(booking)}
-                      disabled={booking.status === "cancelled"}
-                      className={`text-[12px] px-3 py-1 rounded-md flex items-center gap-1 ${booking.status === "cancelled"
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                      disabled={booking.status === "cancelled" || booking.paymentStatus === "paid"}
+                      className={`text-[12px] px-3 py-1 rounded-md flex items-center gap-1 ${booking.status === "cancelled" || booking.paymentStatus === "paid"
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-indigo-600 hover:bg-indigo-700 text-white"
                         }`}
                     >
                       <FaEdit size={12} />

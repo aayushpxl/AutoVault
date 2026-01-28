@@ -1,53 +1,62 @@
-// src/pages/Register.jsx
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-
-import Logo from "../assets/autovaultlogo.png";
-import Illustration from "../assets/illustration.png";
 import RegisterForm from "../components/auth/RegisterForm";
+import { FaCar, FaShieldAlt, FaUserCheck } from "react-icons/fa";
 
 const RegisterPage = () => {
-  const navigate = useNavigate();
-
   return (
-    <div className="flex min-h-screen">
-      {/* Left Side */}
-      <div
-        className="w-1/2 flex items-center justify-center pr-10"
-        style={{ paddingLeft: 0, height: "100vh" }}
-      >
-        <div
-          className="bg-[#e6f0ff] w-full h-full rounded-r-[222px] flex flex-col justify-center items-center p-10 text-center"
-          style={{ boxSizing: "border-box" }}
-        >
-          <h1 className="text-4xl font-bold text-blue-900 mb-8 leading-tight">
-            Join <br /> <span className="text-blue-600">GadiKhoj</span>
-          </h1>
-          <img
-            src={Illustration}
-            alt="Illustration"
-            className="max-w-[70%] h-auto"
-          />
+    <div className="min-h-screen w-full flex bg-[#F8FAFC]">
+      {/* Left Side - Brand & Value Prop */}
+      <div className="hidden lg:flex w-1/2 flex-col justify-center px-16 xl:px-24">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-blue-900 flex items-center gap-2">
+            <FaCar className="text-blue-600" /> AutoVault
+          </h2>
+        </div>
+
+        <h1 className="text-5xl font-extrabold text-[#0f172a] leading-tight mb-4">
+          Join the trusted <br /> vehicle network
+        </h1>
+
+        <p className="text-lg text-slate-500 mb-12 max-w-lg">
+          Create your account to start listing vehicles, booking rentals, and connecting with our community.
+        </p>
+
+        <div className="space-y-6">
+          <div className="flex items-start gap-4">
+            <div className="mt-1 p-1 bg-green-100 rounded-full">
+              <FaShieldAlt className="text-green-600 text-sm" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-800">Verified identity</h3>
+              <p className="text-sm text-slate-500">Build trust with a verified profile</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="mt-1 p-1 bg-green-100 rounded-full">
+              <FaCar className="text-green-600 text-sm" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-800">Manage your garage</h3>
+              <p className="text-sm text-slate-500">Track all your vehicles in one place</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="mt-1 p-1 bg-green-100 rounded-full">
+              <FaUserCheck className="text-green-600 text-sm" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-800">Exclusive deals</h3>
+              <p className="text-sm text-slate-500">Get access to premium listings and offers</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Right Side */}
-      <div className="w-1/2 flex flex-col items-center justify-center pr-1">
-        <img src={Logo} alt="Gadi Khoj Logo" className="w-40 mb-1" />
-
-        <h2 className="text-3xl font-bold mb-9">Sign up to get started</h2>
-
+      {/* Right Side - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-8 py-6">
         <RegisterForm />
-
-        <p className="text-sm text-gray-700 text-center mt-2">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-blue-600 font-semibold hover:underline"
-          >
-            Sign in
-          </Link>
-        </p>
       </div>
     </div>
   );

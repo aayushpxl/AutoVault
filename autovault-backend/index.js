@@ -6,6 +6,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 const { sanitizeInput } = require("./middlewares/sanitizer");
+const { payloadGuard } = require("./middlewares/payloadGuard");
 const { generalLimiter } = require("./middlewares/rateLimiter");
 const { errorLogger } = require("./config/logger");
 
@@ -19,6 +20,7 @@ const vehicleRoute = require("./routes/vehicleRoute");
 const userRoute = require("./routes/userRoute");
 const adminAuditRoute = require("./routes/admin/adminAuditRoute");
 const mfaRoute = require("./routes/mfaRoute");
+const paymentRoute = require("./routes/paymentRoute");
 
 // Connect to MongoDB
 connectDB();
@@ -84,6 +86,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Cookie parser middleware
 app.use(cookieParser());
 
+// Malicious Payload Protection - Detect and block XSS/Injection
+app.use(payloadGuard);
+
 // XSS Protection - Sanitize all inputs
 app.use(sanitizeInput);
 
@@ -105,6 +110,7 @@ app.use("/api/admin/bookings", bookingRoute);
 app.use("/api/saved-vehicles", savedVehicleRoute);
 app.use("/api/reviews", reviewRoute);
 app.use("/api/vehicles", vehicleRoute);
+app.use("/api/payment", paymentRoute);
 
 // ============ ERROR HANDLING ============
 

@@ -58,7 +58,7 @@ const UserSchema = new mongoose.Schema(
     // Email Verification
     emailVerified: {
       type: Boolean,
-      default: false
+      default: true
     },
     verificationToken: String,
     verificationExpiry: Date,
@@ -80,7 +80,18 @@ const UserSchema = new mongoose.Schema(
     lastLoginIP: String,
 
     // Profile Image
-    profilePic: String
+    profilePic: String,
+
+    // Profile Information
+    bio: {
+      type: String,
+      maxlength: [500, "Bio cannot exceed 500 characters"],
+      trim: true
+    },
+    phone: {
+      type: String,
+      trim: true
+    }
   },
   {
     timestamps: true,

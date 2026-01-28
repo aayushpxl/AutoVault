@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
+
 console.log("ENV", import.meta.env.VITE_API_BASE_URL)
 const API_URL = import.meta.env.VITE_API_BASE_URL || "https://localhost:5000/api" // import from env
 const instance = axios.create({
@@ -16,5 +18,38 @@ instance.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Response Interceptor for Global Security Handling
+instance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const data = error.response?.data;
+
+    // Check if it's a security-related response from PayloadGuard
+    if (data?.securityStatus === 'WARNING') {
+      toast.warn(data.message, {
+        toastId: 'payload-guard-warning', // Prevent stacking
+        className: 'security-warning-toast',
+      });
+    } else if (data?.securityStatus === 'BLOCKED') {
+      toast.error(data.message, {
+        toastId: 'payload-guard-blocked', // Prevent stacking
+        className: 'security-blocked-toast',
+        autoClose: 10000,
+      });
+
+      // Emergency Logout Logic
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      // Brief delay to allow the user to see the toast before redirecting
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default instance;

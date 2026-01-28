@@ -50,7 +50,13 @@ export default function SearchResultsPage() {
         const results = await searchVehiclesService(query);
         setVehicles(results);
       } catch (err) {
-        setError(err.message || "Failed to fetch search results.");
+        // If it's a security violation handled by PayloadGuard, 
+        // we skip setting the local error to avoid showing the alert twice on screen.
+        if (err.response?.data?.securityStatus) {
+          setError("");
+        } else {
+          setError(err.message || "Failed to fetch search results.");
+        }
       } finally {
         setLoading(false);
       }

@@ -3,6 +3,7 @@ const router = express.Router();
 
 // Corrected middleware import — change "uploads" to "upload" if your file is upload.js
 const { upload } = require("../../middlewares/uploads");
+const { authenticateUser, isAdmin } = require("../../middlewares/authenticateUser");
 
 const {
     createVehicle,
@@ -11,6 +12,9 @@ const {
     getOneVehicle,
     deleteVehicle
 } = require("../../controllers/admin/vehicleManagementController");
+
+// Apply Auth and Admin middleware to all routes
+router.use(authenticateUser, isAdmin);
 
 // Route to create a vehicle with a single file upload named 'file'
 router.post(

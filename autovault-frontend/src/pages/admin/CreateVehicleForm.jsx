@@ -4,6 +4,8 @@ import { toast } from "react-toastify";
 import { useCreateVehicle } from "../../hooks/admin/useAdminVehicle";
 
 const CreateVehicleForm = () => {
+  const { mutate: createVehicle } = useCreateVehicle();
+
   const formik = useFormik({
     initialValues: {
       vehicleName: "",
@@ -14,7 +16,7 @@ const CreateVehicleForm = () => {
       pricePerTrip: "",
       image: null,
     },
-    onSubmit: async (values) => {
+    onSubmit: async (values, { resetForm }) => {
       const formData = new FormData();
 
       const vehicle = {
@@ -28,26 +30,14 @@ const CreateVehicleForm = () => {
 
       formData.append("vehicle", JSON.stringify(vehicle));
       if (values.image) {
-        formData.append("file", values.image);
+        formData.append("image", values.image);
       }
 
-      try {
-        const res = await fetch("/api/admin/vehicles", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await res.json();
-
-        if (data.success) {
-          toast.success("Vehicle added successfully");
-          formik.resetForm();
-        } else {
-          toast.error(data.message || "Failed to add vehicle");
-        }
-      } catch (err) {
-        console.error(err);
-        toast.error("Something went wrong");
-      }
+      createVehicle(formData, {
+        onSuccess: () => {
+          resetForm();
+        },
+      });
     },
   });
 

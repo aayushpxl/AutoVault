@@ -4,10 +4,12 @@ const {
   getVehicleById,
   getRelatedVehicles,
   searchVehicles,
-  getVehicleTypes
+  getVehicleTypes,
+  getAllVehicles
 } = require('../controllers/vehicleController');
 
-router.get('/search', searchVehicles); 
+router.get('/', getAllVehicles);
+router.get('/search', searchVehicles);
 router.get('/related/:id', getRelatedVehicles);
 router.get('/:id', getVehicleById);
 router.get("/types", getVehicleTypes);

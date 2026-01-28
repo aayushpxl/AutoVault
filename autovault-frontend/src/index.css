@@ -87,6 +87,35 @@ button:focus-visible {
   outline-offset: 3px;
 }
 
+/* Icon-only button override - no styling */
+.btn-icon-only {
+  border-radius: 0 !important;
+  border: none !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  outline: none !important;
+}
+
+.btn-icon-only:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.btn-icon-only:active {
+  transform: none !important;
+  background: transparent !important;
+}
+
+.btn-icon-only:focus,
+.btn-icon-only:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
@@ -214,7 +243,43 @@ button:focus-visible {
   perspective: 1000px;
 }
 
-/* Glassmorphism Utility */
+/* Box Auth Design (v3) */
+:root {
+  --box-periwinkle: #aec6ff;
+  --box-deep-blue: #0b439c;
+  --box-input-bg: #e1ebff;
+  --box-signup-orange: #ffb74d;
+}
+
+.box-card-gradient {
+  background: var(--box-periwinkle);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.box-design-bg {
+  background: #def0ff;
+  position: relative;
+  overflow: hidden;
+}
+
+.box-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 10px solid #bedfff;
+}
+
+.box-circle-filled {
+  position: absolute;
+  border-radius: 50%;
+  background: #0256d4;
+}
+
+.box-circle-light {
+  position: absolute;
+  border-radius: 50%;
+  background: #73a8ff;
+}
+
 .glass {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
@@ -235,4 +300,37 @@ button:focus-visible {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Custom Security Toast Styling - Premium Refinement */
+.security-warning-toast {
+  background: rgba(254, 240, 138, 0.9) !important;
+  /* Yellow-100 with transparency */
+  backdrop-filter: blur(8px) !important;
+  color: #854d0e !important;
+  border-left: 6px solid #eab308 !important;
+  font-weight: 600 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08) !important;
+  padding: 12px 16px !important;
+  min-height: 50px !important;
+}
+
+.security-blocked-toast {
+  background: rgba(254, 226, 226, 0.9) !important;
+  /* Red-100 with transparency */
+  backdrop-filter: blur(8px) !important;
+  color: #991b1b !important;
+  border-left: 6px solid #ef4444 !important;
+  font-weight: 700 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 40px rgba(239, 68, 68, 0.15) !important;
+  padding: 12px 16px !important;
+  min-height: 50px !important;
+}
+
+.Toastify__toast-body {
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 0.95rem !important;
 }

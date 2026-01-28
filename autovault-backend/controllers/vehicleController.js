@@ -1,5 +1,18 @@
 const Vehicle = require('../models/VehicleDetails');
 
+// ✅ GET /api/vehicles/
+exports.getAllVehicles = async (req, res) => {
+  try {
+    const vehicles = await Vehicle.find();
+    res.status(200).json({
+      success: true,
+      data: vehicles
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error fetching vehicles' });
+  }
+};
+
 // ✅ GET /api/vehicles/:id
 exports.getVehicleById = async (req, res) => {
   try {

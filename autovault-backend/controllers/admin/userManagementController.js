@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const { validatePassword, addToPasswordHistory } = require("../../utils/passwordValidator");
+const xss = require("xss");
 
 // Register User
 exports.createUser = async (req, res) => {
@@ -189,7 +190,7 @@ exports.getLoggedInUserProfile = async (req, res) => {
 
 
 exports.updateLoggedInUserProfile = async (req, res) => {
-  const { username, email, currentPassword, newPassword } = req.body;
+  const { username, email, phone, bio, currentPassword, newPassword } = req.body;
 
   try {
     const updateFields = {};
@@ -210,6 +211,22 @@ exports.updateLoggedInUserProfile = async (req, res) => {
         return res.status(400).json({ success: false, message: "Email already in use" });
       }
       updateFields.email = email;
+    }
+
+    // Handle Phone validation
+    if (phone !== undefined) {
+      if (phone && !/^\+?[\d\s-]{7,20}$/.test(phone)) {
+        return res.status(400).json({ success: false, message: "Invalid phone number format" });
+      }
+      updateFields.phone = phone;
+    }
+
+    // Handle Bio validation and XSS protection
+    if (bio !== undefined) {
+      if (bio.length > 500) {
+        return res.status(400).json({ success: false, message: "Bio cannot exceed 500 characters" });
+      }
+      updateFields.bio = xss(bio); // Santize to prevent XSS
     }
 
     // Handle password update

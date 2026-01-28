@@ -14,6 +14,16 @@
             "date": 1769455277880,
             "name": "C:\\Users\\aayus\\AutoVault\\autovault-backend\\logs\\audit-2026-01-27.log",
             "hash": "36e2199455dcee850b74b10a721bde582d4278ee2a673f2715111f60858eb55a"
+        },
+        {
+            "date": 1769584016988,
+            "name": "C:\\Users\\aayus\\AutoVault\\autovault-backend\\logs\\audit-2026-01-28.log",
+            "hash": "8031f854ccc4e85b24a5a1e09b41d94d514d66be5651cda99dec45ed283bddcd"
+        },
+        {
+            "date": 1769625259777,
+            "name": "C:\\Users\\aayus\\AutoVault\\autovault-backend\\logs\\audit-2026-01-29.log",
+            "hash": "d8063e3cb8834610ee2ea974b79fb05b03140946cf52b4d7ea8d76d11c80f6e7"
         }
     ],
     "hashType": "sha256"

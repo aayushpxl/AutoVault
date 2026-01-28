@@ -37,8 +37,11 @@ const MFASecretSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Encryption key from environment
-const ENCRYPTION_KEY = process.env.MFA_ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex').slice(0, 32);
+// Encryption key derived from environment
+// We use SHA-256 to ensure we always have a 32-byte key for AES-256
+const ENCRYPTION_KEY = crypto.createHash('sha256')
+    .update(process.env.MFA_ENCRYPTION_KEY || 'autovault-fallback-security-key-32chars')
+    .digest();
 const IV_LENGTH = 16;
 
 /**
@@ -46,7 +49,7 @@ const IV_LENGTH = 16;
  */
 MFASecretSchema.statics.encrypt = function (text) {
     const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
+    const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
     let encrypted = cipher.update(text);
     encrypted = Buffer.concat([encrypted, cipher.final()]);
     return iv.toString('hex') + ':' + encrypted.toString('hex');
@@ -59,7 +62,7 @@ MFASecretSchema.statics.decrypt = function (text) {
     const parts = text.split(':');
     const iv = Buffer.from(parts.shift(), 'hex');
     const encryptedText = Buffer.from(parts.join(':'), 'hex');
-    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
+    const decipher = crypto.createDecipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
     let decrypted = decipher.update(encryptedText);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return decrypted.toString();

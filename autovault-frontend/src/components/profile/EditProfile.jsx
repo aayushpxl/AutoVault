@@ -70,9 +70,12 @@ const EditProfile = ({ initialData, onSave, isPending, onCancel }) => {
 
   // Function to check if form is changed
   const isFormChanged = () => {
-    // Check if any main form field changed
-    const formFieldsChanged = Object.keys(initialData).some(
-      (key) => formData[key] !== initialData[key]
+    // List of fields that can be edited in the main form
+    const editableFields = ["username", "email", "phone", "bio"];
+
+    // Check if any main form field changed, handling potential null/undefined
+    const formFieldsChanged = editableFields.some(
+      (key) => (formData[key] || "") !== (initialData?.[key] || "")
     );
 
     // Check if any password field is filled
@@ -150,8 +153,9 @@ const EditProfile = ({ initialData, onSave, isPending, onCancel }) => {
             <input
               type="tel"
               name="phone"
-              value={formData.phone}
+              value={formData.phone || ""}
               onChange={handleChange}
+              placeholder="+1 234 567 890"
               className="w-full bg-transparent border-b border-gray-300 focus:outline-none focus:border-black py-2"
             />
           </div>
@@ -161,11 +165,17 @@ const EditProfile = ({ initialData, onSave, isPending, onCancel }) => {
             </label>
             <textarea
               name="bio"
-              value={formData.bio}
+              value={formData.bio || ""}
               onChange={handleChange}
               rows={3}
+              maxLength={500}
               className="w-full bg-transparent border-b border-gray-300 focus:outline-none focus:border-black py-2 resize-none"
             />
+            <div className="flex justify-end">
+              <span className={`text-xs ${formData.bio?.length >= 450 ? "text-red-500" : "text-gray-500"}`}>
+                {formData.bio?.length || 0}/500
+              </span>
+            </div>
           </div>
         </div>
       </section>

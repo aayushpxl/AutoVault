@@ -1,6 +1,6 @@
 const express = require("express")
 const router = express.Router()
-const { createUser, getUsers, updateOneUser, deleteOneUser, getOneUser, getUserCount, resetPassword, sendResetLink} = require("../../controllers/admin/userManagementController")
+const { createUser, getUsers, updateOneUser, deleteOneUser, getOneUser, getUserCount, resetPassword, sendResetLink } = require("../../controllers/admin/userManagementController")
 const { isAdmin, isUser, authenticateUser } = require("../../middlewares/authenticateUser")
 
 
@@ -11,6 +11,8 @@ router.post("/reset-password/:token", resetPassword);
 
 router.post(
     '/create',
+    authenticateUser,
+    isAdmin,
     createUser
 )
 router.get(
@@ -31,7 +33,7 @@ router.get(
     isAdmin,
     getOneUser
 )
-router.get('/count', getUserCount);
+router.get('/count', authenticateUser, isAdmin, getUserCount);
 
 router.delete(
     "/:id",

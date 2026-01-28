@@ -23,10 +23,34 @@ const BookingModal = ({ showModal, onClose, vehicle }) => {
 
   const { mutateAsync: createBooking } = useMutation({
     mutationFn: createBookingService,
-    onSuccess: () => {
-      toast.success("Booking successful!");
+    onSuccess: async (data) => {
+      toast.success("Booking created! Redirecting to payment...");
       queryClient.invalidateQueries(["user_bookings"]);
-      onClose();
+
+      // Initiate eSewa Payment
+      try {
+        const res = await axios.post("/payment/initiate-esewa", { bookingId: data.booking._id });
+        const { formData, esewa_url } = res.data;
+
+        // Create a hidden form and submit it to eSewa
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = esewa_url;
+
+        for (const key in formData) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = formData[key];
+          form.appendChild(input);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+      } catch (error) {
+        toast.error("Failed to initiate eSewa payment. Please pay from My Bookings.");
+        onClose();
+      }
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Booking failed");

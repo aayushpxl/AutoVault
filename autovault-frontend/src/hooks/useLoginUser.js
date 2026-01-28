@@ -7,7 +7,7 @@ export const useLoginUser = () => {
     mutationFn: loginUserService,
     mutationKey: ['login-key'],
     onError: (err) => {
-      toast.error(err?.message || "Login Failed");
+      // Error will be displayed in the form UI only
       console.log(err);
     }
   });
