@@ -31,21 +31,25 @@ instance.interceptors.response.use(
         toastId: 'payload-guard-warning', // Prevent stacking
         className: 'security-warning-toast',
       });
-    } else if (data?.securityStatus === 'BLOCKED') {
-      toast.error(data.message, {
-        toastId: 'payload-guard-blocked', // Prevent stacking
-        className: 'security-blocked-toast',
-        autoClose: 10000,
-      });
+    } else if (data?.securityStatus === 'BLOCKED' || error.response?.status === 401) {
+      if (data?.securityStatus === 'BLOCKED') {
+        toast.error(data.message, {
+          toastId: 'payload-guard-blocked', // Prevent stacking
+          className: 'security-blocked-toast',
+          autoClose: 10000,
+        });
+      }
 
-      // Emergency Logout Logic
+      // Emergency Logout Logic (for both blocked and unauthorized)
       localStorage.removeItem("token");
       localStorage.removeItem("user");
 
-      // Brief delay to allow the user to see the toast before redirecting
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 2000);
+      // Redirect to login if not already there
+      if (!window.location.pathname.includes('/login')) {
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, data?.securityStatus === 'BLOCKED' ? 2000 : 500);
+      }
     }
 
     return Promise.reject(error);
