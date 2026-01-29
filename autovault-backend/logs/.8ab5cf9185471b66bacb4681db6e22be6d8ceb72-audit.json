@@ -19,6 +19,11 @@
             "date": 1769584017002,
             "name": "C:\\Users\\aayus\\AutoVault\\autovault-backend\\logs\\access-2026-01-28.log",
             "hash": "061ba8eb3ba89d4703f0c212d16c860d0e360e3c191424b0aa3302d39e43eee5"
+        },
+        {
+            "date": 1769627464711,
+            "name": "C:\\Users\\aayus\\AutoVault\\autovault-backend\\logs\\access-2026-01-29.log",
+            "hash": "e765cc1cd9ca70b15ead843ebf7a5e2e2563e4dfce289387428e94da94656bb0"
         }
     ],
     "hashType": "sha256"

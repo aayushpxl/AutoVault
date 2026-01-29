@@ -9,7 +9,8 @@ const {
   getOneUser,
   getLoggedInUserProfile,
   updateLoggedInUserProfile,
-  deleteLoggedInUser
+  deleteLoggedInUser,
+  updateProfilePicture
 } = require('../controllers/admin/userManagementController');
 
 // Import middlewares
@@ -18,6 +19,7 @@ const { registrationLimiter, loginLimiter, strictLimiter } = require('../middlew
 const { verifyRecaptcha } = require('../middlewares/recaptcha');
 
 const { ipTracker } = require('../middlewares/ipTracker');
+const { upload, handleUploadError } = require('../middlewares/uploads');
 
 // --- Public Routes ---
 // Registration with rate limiting and reCAPTCHA protection
@@ -27,8 +29,8 @@ router.post('/register', registrationLimiter, verifyRecaptcha, registerUser);
 router.get('/verify-email/:token', verifyEmail);
 router.post('/resend-verification', strictLimiter, resendVerification);
 
-// Login with rate limiting and IP tracking
-router.post('/login', loginLimiter, ipTracker, loginUser);
+// Login with rate limiting, IP tracking, and reCAPTCHA
+router.post('/login', loginLimiter, verifyRecaptcha, ipTracker, loginUser);
 
 // Logout (requires authentication)
 router.post('/logout', authenticateUser, logoutUser);
@@ -41,6 +43,15 @@ router.get('/me', authenticateUser, getLoggedInUserProfile);
 
 // Route to update the currently logged-in user's profile
 router.put('/update', authenticateUser, updateLoggedInUserProfile);
+
+// Route to update profile picture with secure file upload
+router.put(
+  '/profile-picture',
+  authenticateUser,
+  upload.single('profilePic'),
+  handleUploadError,
+  updateProfilePicture
+);
 
 // Delete the currently logged-in user's account
 router.delete('/delete', authenticateUser, deleteLoggedInUser);

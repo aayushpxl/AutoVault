@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { userRegisterUserTan } from "../../hooks/useRegisterUserTan";
-import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import ReCAPTCHA from "react-google-recaptcha";
 import { FcGoogle } from "react-icons/fc";
 
 const RegisterForm = () => {
@@ -14,8 +14,8 @@ const RegisterForm = () => {
   const [pass, setPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
   const [username, setUsername] = useState("");
+  const recaptchaRef = React.useRef(null);
 
-  const { executeRecaptcha } = useGoogleReCaptcha();
   const { mutate, data, error, isPending, isSuccess, isError } = userRegisterUserTan();
 
   const handleSubmit = async (e) => {
@@ -31,16 +31,19 @@ const RegisterForm = () => {
       return;
     }
 
-    // Attempt reCAPTCHA
-    let recaptchaToken = "bypass-token"; // Default for dev if key missing
-    try {
-      const token = await executeRecaptcha("register");
-      if (token) recaptchaToken = token;
-    } catch (err) {
-      console.log("Recaptcha bypassed/failed");
+    // Get reCAPTCHA token
+    const recaptchaToken = recaptchaRef.current?.getValue();
+
+    if (!recaptchaToken) {
+      toast.error("Please complete the reCAPTCHA verification");
+      return;
     }
 
-    mutate({ email, username, password: pass, recaptchaToken });
+    mutate({ email, username, password: pass, recaptchaToken }, {
+      onError: () => {
+        recaptchaRef.current?.reset();
+      }
+    });
   };
 
   return (
@@ -123,6 +126,14 @@ const RegisterForm = () => {
               {showConfirmPassword ? <FaEye /> : <FaEyeSlash />}
             </button>
           </div>
+        </div>
+
+        <div className="mb-4 flex justify-center bg-gray-50 p-2 rounded-lg border border-gray-100">
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+            size="normal"
+          />
         </div>
 
         <button

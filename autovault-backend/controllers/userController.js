@@ -9,7 +9,9 @@ const { sendVerificationEmail, sendWelcomeEmail } = require("../utils/emailServi
 
 // Register User
 exports.registerUser = async (req, res) => {
-    const { username, email, password, role } = req.body;
+    let { username, email, password, role } = req.body;
+
+    if (email) email = email.toLowerCase();
 
     // Basic field validation
     if (!username || !email || !password) {
@@ -109,8 +111,16 @@ exports.loginUser = async (req, res) => {
     }
 
     try {
-        // Find user by email
-        const user = await User.findOne({ email });
+        console.log('Login attempt for identity:', email);
+        // Find user by email or username (case-insensitive for email)
+        const user = await User.findOne({
+            $or: [
+                { email: email.toLowerCase() },
+                { username: email }
+            ]
+        });
+        console.log('User found:', user ? 'Yes' : 'No');
+        if (user) console.log('User email in DB:', user.email);
 
         if (!user) {
             return res.status(400).json({

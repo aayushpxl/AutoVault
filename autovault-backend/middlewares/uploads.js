@@ -15,18 +15,22 @@ const sanitizeFilename = (filename) => {
 };
 
 /**
- * Validate file extension (prevent double-extension attacks)
+ * Validate file extension (prevent double-extension attacks while allowing dots in names)
  */
 const isValidExtension = (filename) => {
     const parts = filename.toLowerCase().split('.');
-
-    // Check for multiple extensions (e.g., file.php.jpg)
-    if (parts.length > 2) {
-        return false;
-    }
+    if (parts.length < 2) return false;
 
     const ext = parts[parts.length - 1];
-    const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+    // Double extension protection: Check if any part before the last one is a dangerous extension
+    const dangerousExts = ['php', 'js', 'html', 'htm', 'exe', 'sh', 'bat', 'jsp', 'asp'];
+    const hasDangerousPart = parts.slice(0, -1).some(part => dangerousExts.includes(part));
+
+    if (hasDangerousPart) {
+        return false;
+    }
 
     return allowedExts.includes(ext);
 };
@@ -63,30 +67,42 @@ const fileFilter = (req, file, cb) => {
         'image/jpeg',
         'image/jpg',
         'image/png',
-        'image/webp'
+        'image/webp',
+        'image/gif'
     ];
 
-    // Allowed file extensions
-    const allowedExtensions = /jpeg|jpg|png|webp/;
+    // Allowed file extensions (anchored for security)
+    const allowedExtensions = /^\.(jpeg|jpg|png|webp|gif)$/;
 
     // Sanitize filename
     const sanitizedFilename = sanitizeFilename(file.originalname);
+    const extension = path.extname(sanitizedFilename).toLowerCase();
 
     // Check extension
-    const extname = allowedExtensions.test(path.extname(sanitizedFilename).toLowerCase());
+    const isExtensionValid = allowedExtensions.test(extension);
 
     // Check MIME type
-    const mimetype = allowedMimeTypes.includes(file.mimetype);
+    const isMimetypeValid = allowedMimeTypes.includes(file.mimetype);
+
+    if (process.env.NODE_ENV === 'development') {
+        console.log('--- Upload Debug ---');
+        console.log('Original Name:', file.originalname);
+        console.log('Sanitized Name:', sanitizedFilename);
+        console.log('Extension:', extension);
+        console.log('MIME Type:', file.mimetype);
+        console.log('Is Extension Valid:', isExtensionValid);
+        console.log('Is MIME Valid:', isMimetypeValid);
+    }
 
     // Both must match to be valid
-    if (extname && mimetype) {
+    if (isExtensionValid && isMimetypeValid) {
         return cb(null, true);
     }
 
     // Reject file with detailed error
-    const errorMsg = !mimetype
-        ? `Invalid file type. Only JPEG, PNG, and WebP images are allowed.`
-        : `Invalid file extension.`;
+    const errorMsg = !isMimetypeValid
+        ? `Invalid file type (${file.mimetype}). Only JPEG, PNG, GIF, and WebP are allowed.`
+        : `Invalid file extension (${extension}).`;
 
     cb(new Error(errorMsg));
 };
@@ -95,7 +111,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
     storage,
     limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB max
+        fileSize: 10 * 1024 * 1024, // 10MB max
         files: 1 // Only one file at a time
     },
     fileFilter
@@ -107,7 +123,7 @@ const handleUploadError = (err, req, res, next) => {
         if (err.code === 'LIMIT_FILE_SIZE') {
             return res.status(400).json({
                 success: false,
-                message: 'File size too large. Maximum size is 5MB.'
+                message: 'File size too large. Maximum size is 10MB.'
             });
         }
         if (err.code === 'LIMIT_FILE_COUNT') {

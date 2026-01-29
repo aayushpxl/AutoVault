@@ -10,6 +10,11 @@ export const getUserCountApi = () => axios.get("/admin/user/count")
 export const getLoggedInUserApi = () => axios.get("/auth/me");
 export const updateLoggedInUserApi = (data) => axios.put("/auth/update", data);
 export const deleteLoggedInUserApi = () => axios.delete("/auth/delete");
+export const updateProfilePictureApi = (data) => axios.put("/auth/profile-picture", data, {
+  headers: {
+    'Content-Type': 'multipart/form-data'
+  }
+});
 
 // Forgot/Reset Password
 export const sendResetLinkApi = (email) =>

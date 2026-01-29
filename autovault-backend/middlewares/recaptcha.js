@@ -24,21 +24,26 @@ const verifyRecaptcha = async (req, res, next) => {
 
         // Verify with Google reCAPTCHA API
         const verificationURL = 'https://www.google.com/recaptcha/api/siteverify';
-        const response = await axios.post(verificationURL, null, {
-            params: {
-                secret: process.env.RECAPTCHA_SECRET_KEY,
-                response: recaptchaToken
-            }
-        });
+
+        // Use URLSearchParams for application/x-www-form-urlencoded
+        const params = new URLSearchParams();
+        params.append('secret', process.env.RECAPTCHA_SECRET_KEY);
+        params.append('response', recaptchaToken);
+
+        const response = await axios.post(verificationURL, params);
 
         const { success, 'error-codes': errorCodes } = response.data;
 
         // Check if verification was successful
         if (!success) {
             console.error('reCAPTCHA verification failed:', errorCodes);
+            console.log('Secret used:', process.env.RECAPTCHA_SECRET_KEY ? 'Present' : 'Missing');
+            console.log('Token used:', recaptchaToken ? recaptchaToken.substring(0, 10) + '...' : 'Missing');
+
             return res.status(400).json({
                 success: false,
-                message: 'reCAPTCHA verification failed. Please try again.'
+                message: 'reCAPTCHA verification failed. Please try again.',
+                errors: errorCodes // Return error codes for easier debugging
             });
         }
 

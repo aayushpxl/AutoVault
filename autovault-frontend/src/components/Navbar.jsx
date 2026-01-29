@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Menu, X, Search } from "lucide-react";
+import { Menu, X, Search, User } from "lucide-react";
 import logo from "../assets/autovaultlogo.png";
+import { useUserProfile } from "../hooks/useProfilePage";
 
 const navItems = [
   { name: "Home", path: "/home" },
@@ -14,7 +15,20 @@ const navItems = [
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: userData } = useUserProfile();
   const navigate = useNavigate();
+
+  // Build the correct URL for the profile picture
+  const getProfilePicUrl = () => {
+    if (!userData?.profilePic) return null;
+    if (userData.profilePic.startsWith('http')) return userData.profilePic;
+
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "https://localhost:5000/api";
+    const serverRoot = apiBase.replace(/\/api\/?$/, "");
+    return `${serverRoot}/uploads/${userData.profilePic}`;
+  };
+
+  const profilePicUrl = getProfilePicUrl();
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -52,12 +66,21 @@ export default function Navbar() {
                 }
               >
                 {({ isActive }) => (
-                  <>
-                    {name}
+                  <div className="flex items-center gap-2">
+                    {name === "Profile" && (
+                      <div className="w-6 h-6 rounded-full overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center">
+                        {profilePicUrl ? (
+                          <img src={profilePicUrl} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={14} className="text-slate-400" />
+                        )}
+                      </div>
+                    )}
+                    <span>{name}</span>
                     {isActive && (
                       <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary rounded-full"></span>
                     )}
-                  </>
+                  </div>
                 )}
               </NavLink>
             </li>

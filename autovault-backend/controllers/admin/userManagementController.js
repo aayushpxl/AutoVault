@@ -4,6 +4,9 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const { validatePassword, addToPasswordHistory } = require("../../utils/passwordValidator");
 const xss = require("xss");
+const fs = require("fs");
+const path = require("path");
+const { logAudit } = require("../../config/logger");
 
 // Register User
 exports.createUser = async (req, res) => {
@@ -406,3 +409,58 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+
+// Update logged-in user's profile picture
+exports.updateProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Please upload an image"
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Delete old profile picture if it exists
+    if (user.profilePic) {
+      const oldPath = path.join(__dirname, "..", "..", "uploads", user.profilePic);
+      if (fs.existsSync(oldPath)) {
+        try {
+          fs.unlinkSync(oldPath);
+        } catch (err) {
+          console.error("Failed to delete old profile picture:", err);
+        }
+      }
+    }
+
+    // Update user with new profile picture filename
+    user.profilePic = req.file.filename;
+    await user.save();
+
+    // Log the action
+    logAudit('PROFILE_PICTURE_UPDATED', user._id, {
+      username: user.username,
+      filename: req.file.filename,
+      ip: req.ip
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile picture updated successfully",
+      profilePic: user.profilePic
+    });
+  } catch (err) {
+    console.error("🔥 Error in updateProfilePicture:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error"
+    });
+  }
+};

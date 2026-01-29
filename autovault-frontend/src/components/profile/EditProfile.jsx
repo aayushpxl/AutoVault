@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaCamera } from "react-icons/fa";
 
 const EditProfile = ({ initialData, onSave, isPending, onCancel }) => {
   const [formData, setFormData] = useState(initialData);
@@ -82,7 +82,10 @@ const EditProfile = ({ initialData, onSave, isPending, onCancel }) => {
     const passwordChanged =
       currentPassword.length > 0 || newPassword.length > 0 || confirmPassword.length > 0;
 
-    return formFieldsChanged || passwordChanged;
+    // Check if new profile pic selected
+    const profilePicChanged = !!formData._newFile;
+
+    return formFieldsChanged || passwordChanged || profilePicChanged;
   };
 
   return (
@@ -115,6 +118,46 @@ const EditProfile = ({ initialData, onSave, isPending, onCancel }) => {
           </button>
         </div>
       </header>
+
+      {/* Profile Picture Section */}
+      <section className="flex flex-col items-center space-y-4 border-b pb-10">
+        <div className="relative group">
+          <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-4xl overflow-hidden border-2 border-dashed border-gray-300">
+            {formData.profilePic ? (
+              <img
+                src={
+                  formData.profilePic.startsWith("data:image") || formData.profilePic.startsWith("blob:")
+                    ? formData.profilePic
+                    : `${import.meta.env.VITE_API_BASE_URL.replace("/api", "")}/uploads/${formData.profilePic}`
+                }
+                alt="Preview"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <FaCamera />
+            )}
+          </div>
+          <label className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 rounded-full cursor-pointer transition">
+            <span className="text-white text-xs font-medium">Change Photo</span>
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setFormData(prev => ({ ...prev, profilePic: reader.result, _newFile: file }));
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
+          </label>
+        </div>
+        <p className="text-xs text-gray-500">JPG, PNG or WebP. Max 10MB.</p>
+      </section>
 
       {/* About Section */}
       <section className="space-y-6">

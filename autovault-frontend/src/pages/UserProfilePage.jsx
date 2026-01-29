@@ -3,8 +3,9 @@ import {
   useUserProfile,
   useDeleteUserProfile,
   useUpdateUserProfile,
+  useUpdateProfilePicture,
 } from "../hooks/useProfilePage";
-import { FaEdit, FaTrashAlt, FaSignOutAlt } from "react-icons/fa";
+import { FaEdit, FaTrashAlt, FaSignOutAlt, FaCamera } from "react-icons/fa";
 import LogoutModal from "../components/profile/LogoutModal";
 import DeleteProfileModal from "../components/profile/DeleteProfileModal";
 import EditProfile from "../components/profile/EditProfile";
@@ -14,8 +15,12 @@ import { useNavigate } from "react-router-dom";
 const UserProfilePage = () => {
   const { data: user, isLoading, error } = useUserProfile();
   const { mutate: deleteUser, isLoading: isDeleting } = useDeleteUserProfile();
-  const { mutate: updateUser, isPending: isUpdating } = useUpdateUserProfile();
 
+  // Use mutations with manual control
+  const { mutateAsync: updateUser } = useUpdateUserProfile({ quiet: true });
+  const { mutateAsync: updateProfilePic, isPending: isUpdatingPic } = useUpdateProfilePicture({ quiet: true });
+
+  const [isUpdating, setIsUpdating] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -28,16 +33,48 @@ const UserProfilePage = () => {
     navigate("/login");
   };
 
-  const handleSave = (formData) => {
-    updateUser(formData, {
-      onSuccess: () => {
-        setIsEditing(false);
-      },
-    });
+  const handleSave = async (formData) => {
+    setIsUpdating(true);
+    const { _newFile, ...profileData } = formData;
+
+    try {
+      // 1. If a new file was selected, upload it first
+      if (_newFile) {
+        await updateProfilePic(_newFile);
+      }
+
+      // 2. Strip profilePic from JSON (as it's handled above)
+      if (profileData.profilePic && typeof profileData.profilePic === 'string' && profileData.profilePic.startsWith('data:image')) {
+        delete profileData.profilePic;
+      }
+
+      // 3. Update the rest of the profile
+      await updateUser(profileData);
+
+      // 4. Single Success notification
+      import("react-toastify").then(({ toast }) => toast.success("Profile updated successfully!"));
+      setIsEditing(false);
+    } catch (err) {
+      import("react-toastify").then(({ toast }) => toast.error(err.response?.data?.message || "Failed to update profile."));
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        await updateProfilePic(file);
+        import("react-toastify").then(({ toast }) => toast.success("Profile picture updated!"));
+      } catch (err) {
+        import("react-toastify").then(({ toast }) => toast.error(err.response?.data?.message || "Failed to update profile picture."));
+      }
+    }
   };
 
   if (isLoading) {
@@ -66,6 +103,20 @@ const UserProfilePage = () => {
     );
   }
 
+  // Build the correct URL for the profile picture
+  // If user.profilePic is already a full URL, use it. Otherwise, build it from baseURL.
+  const getProfilePicUrl = () => {
+    if (!user.profilePic) return null;
+    if (user.profilePic.startsWith('http')) return user.profilePic;
+
+    // Get server root from VITE_API_BASE_URL (removing /api)
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "https://localhost:5000/api";
+    const serverRoot = apiBase.replace(/\/api\/?$/, "");
+    return `${serverRoot}/uploads/${user.profilePic}`;
+  };
+
+  const profilePicUrl = getProfilePicUrl();
+
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-12">
       <div className="max-w-4xl mx-auto space-y-12">
@@ -73,8 +124,35 @@ const UserProfilePage = () => {
         {/* Top Header with Avatar and Buttons */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white text-2xl font-semibold shadow-inner">
-              {user.username?.[0]?.toUpperCase()}
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white text-3xl font-semibold shadow-inner overflow-hidden border-2 border-white relative">
+                {profilePicUrl ? (
+                  <img
+                    src={profilePicUrl}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // If image fails, hide it and the fallback (initials) will be visible behind
+                      // Actually, let's just null out the URL locally for this render
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                ) : null}
+                {/* Fallback Initials (rendered behind the image) */}
+                <span className="absolute inset-0 flex items-center justify-center -z-10 bg-inherit rounded-full">
+                  {user.username?.[0]?.toUpperCase()}
+                </span>
+
+                {isUpdatingPic && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                  </div>
+                )}
+              </div>
+              <label className="absolute bottom-0 right-0 p-2 bg-black text-white rounded-full cursor-pointer hover:bg-gray-800 transition shadow-lg opacity-0 group-hover:opacity-100">
+                <FaCamera size={14} />
+                <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} disabled={isUpdatingPic} />
+              </label>
             </div>
             <div>
               <h1 className="text-3xl font-semibold text-gray-900">{user.username}</h1>

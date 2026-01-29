@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getLoggedInUserApi, updateLoggedInUserApi, deleteLoggedInUserApi } from "../api/admin/userApi";
+import { getLoggedInUserApi, updateLoggedInUserApi, deleteLoggedInUserApi, updateProfilePictureApi } from "../api/admin/userApi";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -24,16 +24,42 @@ export const useUserProfile = () => {
   });
 };
 
-export const useUpdateUserProfile = () => {
+export const useUpdateUserProfile = (options = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateUserProfile,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Optimistically update the cache with the new user data
+      queryClient.setQueryData(["loggedInUserProfile"], data);
       queryClient.invalidateQueries(["loggedInUserProfile"]);
-      toast.success("Profile updated successfully!");
+      if (options.onSuccess) options.onSuccess(data);
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to update profile.");
+      if (options.onError) options.onError(error);
+    },
+  });
+};
+
+export const useUpdateProfilePicture = (options = {}) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (file) => {
+      const formData = new FormData();
+      formData.append("profilePic", file);
+      const { data } = await updateProfilePictureApi(formData);
+      return data; // This should be { success: true, profilePic: '...' }
+    },
+    onSuccess: (data) => {
+      // Immediately sync the profilePic field in the user cache
+      queryClient.setQueryData(["loggedInUserProfile"], (oldData) => {
+        if (!oldData) return oldData;
+        return { ...oldData, profilePic: data.profilePic };
+      });
+      queryClient.invalidateQueries(["loggedInUserProfile"]);
+      if (options.onSuccess) options.onSuccess(data);
+    },
+    onError: (error) => {
+      if (options.onError) options.onError(error);
     },
   });
 };

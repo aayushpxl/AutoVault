@@ -8,3 +8,8 @@ export const setupMFAApi = () => axios.post("/mfa/setup");
 export const verifyMFASetupApi = (data) => axios.post("/mfa/verify-setup", data);
 export const disableMFAApi = (data) => axios.post("/mfa/disable", data);
 export const getMFAStatusApi = () => axios.get("/mfa/status");
+export const updateProfilePictureApi = (data) => axios.put("/auth/profile-picture", data, {
+    headers: {
+        'Content-Type': 'multipart/form-data'
+    }
+});

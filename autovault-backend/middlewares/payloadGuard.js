@@ -66,95 +66,127 @@ const payloadGuard = async (req, res, next) => {
                 user = await User.findById(userId);
             }
         }
-    } catch (err) {
-        // Suppress auth errors here, we just want to know if they ARE logged in
-    }
+    } catch (err) { }
 
-    // 2. Check if Account is currently locked (via User model)
-    // We skip this check for the login route to allow users to switch accounts 
-    // if their current session's account is locked.
-    const isLoginRoute = req.path.includes('/login');
+    // 2. Check if Account is currently locked
+    // We only skip the check for the /logout route and specific /login login POST
+    // We MUST block registration if they are trying to bypass via a locked session
+    const isPublicAuthRoute = req.path.match(/\/(login|register|logout|forgot-password|reset-password)/);
+    const isLogout = req.path.includes('/logout');
 
-    if (user && user.isAccountLocked() && !isLoginRoute) {
+    if (user && user.isAccountLocked() && !isLogout) {
         const lockTime = Math.ceil((user.accountLockedUntil - now) / 60000);
+
+        // Log the attempted bypass
+        logAudit('LOCKED_ACCOUNT_ACCESS_ATTEMPT', user._id, {
+            url: req.originalUrl,
+            ip: req.ip
+        });
+
+        // Clear the token cookie to stop the cycle if they are persistent
+        clearTokenCookie(res);
+
         return res.status(403).json({
             success: false,
-            message: `🚫 ACCOUNT LOCKED: Your account has been temporarily locked for ${lockTime} more minutes due to repeated malicious payload attempts.`,
+            message: `🚫 ACCOUNT LOCKED: Your account is locked for ${lockTime} more minutes. Session cleared.`,
             securityStatus: 'BLOCKED'
         });
     }
 
-    // 3. Check for malicious patterns in body, query, and params
+    // 3. Guest Violation Check (Session-based, not IP-based)
+    // This satisfies "do not block the ip"
+    const guestSecurityCookie = req.cookies.autovault_sec_track;
+    let guestCount = 0;
+    if (guestSecurityCookie) {
+        try {
+            const data = JSON.parse(Buffer.from(guestSecurityCookie, 'base64').toString());
+            if (data.expiry > now) {
+                guestCount = data.count;
+                // If they are strictly blocked (even as guest session)
+                if (data.blockedUntil > now) {
+                    return res.status(403).json({
+                        success: false,
+                        message: "🚫 ACCESS DENIED: This session has been blocked due to repeated malicious attempts.",
+                        securityStatus: 'BLOCKED'
+                    });
+                }
+            }
+        } catch (e) { guestCount = 0; }
+    }
+
+    // 4. Check for malicious patterns in body, query, and params
     const isMalicious = hasMaliciousContent(req.body) ||
         hasMaliciousContent(req.query) ||
         hasMaliciousContent(req.params);
 
     if (isMalicious) {
-        // Log the violation
+        // Increment Violation
+        const newCount = (userId ? (violations.get(userId)?.count || 0) : guestCount) + 1;
+        const limit = userId ? 2 : WARNING_LIMIT; // Be stricter with logged-in users (2 attempts)
+
         logAudit('MALICIOUS_PAYLOAD_DETECTED', userId || 'GUEST', {
             ip: req.ip,
             url: req.originalUrl,
             method: req.method,
-            payload: {
-                body: req.body,
-                query: req.query,
-                params: req.params
-            }
+            violationCount: newCount,
+            payload: { body: req.body, query: req.query, params: req.params }
         });
 
-        // If Guest - Track count just for the warning message (no block by IP)
-        if (!userId) {
-            const guestIp = req.ip;
-            let guestViolator = violations.get(guestIp);
-            if (!guestViolator) {
-                guestViolator = { count: 1, lastAttempt: now };
-                violations.set(guestIp, guestViolator);
-            } else {
-                guestViolator.count += 1;
-                guestViolator.lastAttempt = now;
+        if (userId) {
+            // AUTHENTICATED USER BLOCK
+            if (newCount >= limit) {
+                await User.findByIdAndUpdate(userId, {
+                    accountLockedUntil: now + BLOCK_DURATION_MS,
+                    $inc: { failedLoginAttempts: 1 }
+                });
+
+                violations.delete(userId);
+                clearTokenCookie(res);
+
+                return res.status(403).json({
+                    success: false,
+                    message: "🚫 ACCOUNT BLOCKED: Your account has been locked due to malicious activity. Session cleared.",
+                    securityStatus: 'BLOCKED'
+                });
+            }
+
+            violations.set(userId, { count: newCount, lastAttempt: now });
+            return res.status(400).json({
+                success: false,
+                message: `⚠️ SECURITY WARNING: Malicious pattern detected (${newCount}/${limit}). Account will be locked on next attempt.`,
+                securityStatus: 'WARNING'
+            });
+
+        } else {
+            // GUEST SESSION BLOCK (via Security Cookie)
+            const blockedUntil = newCount >= WARNING_LIMIT ? now + BLOCK_DURATION_MS : 0;
+            const secData = Buffer.from(JSON.stringify({
+                count: newCount,
+                expiry: now + (24 * 60 * 60 * 1000), // Tracks for 24h
+                blockedUntil
+            })).toString('base64');
+
+            res.cookie('autovault_sec_track', secData, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 24 * 60 * 60 * 1000
+            });
+
+            if (blockedUntil > 0) {
+                return res.status(403).json({
+                    success: false,
+                    message: "🚫 SESSION BLOCKED: You are blocked from performing further actions due to malicious activity.",
+                    securityStatus: 'BLOCKED'
+                });
             }
 
             return res.status(400).json({
                 success: false,
-                message: `⚠️ SECURITY WARNING: Malicious pattern detected (${guestViolator.count}/${WARNING_LIMIT}). Guest attempts are strictly monitored.`,
+                message: `⚠️ SECURITY WARNING: Malicious pattern detected (${newCount}/${WARNING_LIMIT}). Guest session strictly monitored.`,
                 securityStatus: 'WARNING'
             });
         }
-
-        // If Authenticated User - Track and Block
-        let violator = violations.get(userId);
-        if (!violator) {
-            violator = { count: 1, lastAttempt: now };
-            violations.set(userId, violator);
-        } else {
-            violator.count += 1;
-            violator.lastAttempt = now;
-        }
-
-        // 4. Enforce blocking for account
-        if (violator.count >= WARNING_LIMIT) {
-            // Lock account in Database
-            await User.findByIdAndUpdate(userId, {
-                accountLockedUntil: now + BLOCK_DURATION_MS,
-                $inc: { failedLoginAttempts: 1 } // Treat as high-risk behavior
-            });
-
-            // Clear in-memory violation after DB lock
-            violations.delete(userId);
-
-            return res.status(403).json({
-                success: false,
-                message: "🚫 ACCOUNT BLOCKED: Your account has been locked for 20 minutes due to persistent malicious activity.",
-                securityStatus: 'BLOCKED'
-            });
-        }
-
-        // 5. Issue warning
-        return res.status(400).json({
-            success: false,
-            message: `⚠️ SECURITY WARNING: Malicious pattern detected (${violator.count}/${WARNING_LIMIT}). Continued attempts will lead to an immediate account lock.`,
-            securityStatus: 'WARNING'
-        });
     }
 
     next();
