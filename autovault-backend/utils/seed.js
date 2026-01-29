@@ -56,7 +56,7 @@ const seedData = async () => {
                 passengerCapacity: "5",
                 pricePerTrip: 1500,
                 vehicleDescription: "High-performance electric luxury sedan with long range and advanced technology.",
-                filepath: "uploads/tesla-model-s.jpg"
+                filepath: "tesla-model-s.jpg"
             },
             {
                 vehicleName: "Ford F-150",
@@ -66,7 +66,7 @@ const seedData = async () => {
                 passengerCapacity: "5",
                 pricePerTrip: 2000,
                 vehicleDescription: "Powerful and versatile pickup truck suitable for heavy-duty work and off-roading.",
-                filepath: "uploads/ford-f150.jpg"
+                filepath: "ford-f150.jpg"
             },
             {
                 vehicleName: "Honda Civic",
@@ -76,7 +76,7 @@ const seedData = async () => {
                 passengerCapacity: "5",
                 pricePerTrip: 800,
                 vehicleDescription: "Reliable, fuel-efficient, and comfortable compact car for daily commuting.",
-                filepath: "uploads/honda-civic.jpg"
+                filepath: "honda-civic.jpg"
             },
             {
                 vehicleName: "Toyota RAV4",
@@ -86,7 +86,7 @@ const seedData = async () => {
                 passengerCapacity: "5",
                 pricePerTrip: 1200,
                 vehicleDescription: "Popular compact SUV offering durability, space, and a smooth ride.",
-                filepath: "uploads/toyota-rav4.jpg"
+                filepath: "toyota-rav4.jpg"
             }
         ];
 

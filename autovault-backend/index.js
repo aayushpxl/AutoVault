@@ -4,6 +4,7 @@ const path = require("path");
 const helmet = require("helmet");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const xss = require("xss");
 const connectDB = require("./config/db");
 const { sanitizeInput } = require("./middlewares/sanitizer");
 const { payloadGuard } = require("./middlewares/payloadGuard");
@@ -52,7 +53,8 @@ app.use(helmet({
     },
     referrerPolicy: {
         policy: 'strict-origin-when-cross-origin'
-    }
+    },
+    crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 // CORS Configuration - Strict origin whitelisting

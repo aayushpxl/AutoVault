@@ -51,15 +51,18 @@ const clearTokenCookie = (res) => {
  * Extract token from cookie or Authorization header
  */
 const extractToken = (req) => {
-    // First try to get from cookie
-    if (req.cookies && req.cookies.token) {
-        return req.cookies.token;
-    }
-
-    // Fallback to Authorization header for backwards compatibility
+    // Prioritize Authorization header for frontend flexibility
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
-        return authHeader.split(' ')[1];
+        const token = authHeader.split(' ')[1];
+        if (token && token !== 'undefined' && token !== 'null') {
+            return token;
+        }
+    }
+
+    // Fallback to cookie
+    if (req.cookies && req.cookies.token) {
+        return req.cookies.token;
     }
 
     return null;
@@ -72,6 +75,7 @@ const verifyToken = (token) => {
     try {
         return jwt.verify(token, process.env.SECRET);
     } catch (error) {
+        console.error('JWT Verification Error:', error.message);
         return null;
     }
 };

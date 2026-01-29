@@ -111,7 +111,6 @@ exports.loginUser = async (req, res) => {
     }
 
     try {
-        console.log('Login attempt for identity:', email);
         // Find user by email or username (case-insensitive for email)
         const user = await User.findOne({
             $or: [
@@ -119,8 +118,6 @@ exports.loginUser = async (req, res) => {
                 { username: email }
             ]
         });
-        console.log('User found:', user ? 'Yes' : 'No');
-        if (user) console.log('User email in DB:', user.email);
 
         if (!user) {
             return res.status(400).json({

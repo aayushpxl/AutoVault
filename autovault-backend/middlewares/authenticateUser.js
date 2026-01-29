@@ -7,12 +7,6 @@ exports.authenticateUser = async (req, res, next) => {
         // Extract token from cookie or Authorization header
         const token = extractToken(req);
 
-        // DEBUG LOGGING
-        if (process.env.NODE_ENV === 'development') {
-            // console.log('--- Auth Debug ---');
-            // console.log('Extracted Token:', token ? token.substring(0, 15) + '...' : 'None');
-        }
-
         if (!token) {
             return res.status(401).json({
                 success: false,
